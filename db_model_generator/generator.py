@@ -30,9 +30,8 @@ class ModelFormGenerator:
                 "imports": [
                     "from flask_sqlalchemy import SQLAlchemy",
                     "from datetime import datetime",
-                    "db = SQLAlchemy()"
                 ],
-                "exclude_columns": ["id", "created_at", "updated_at"],
+                "exclude_columns": ["created_at", "updated_at"],
                 "type_mapping": {
                     "string": "db.String",
                     "text": "db.Text",
@@ -202,6 +201,8 @@ class ModelFormGenerator:
 
         # Код модели
         model_code = [f"{imports}\n\n"]
+        model_code.append(f"__all__ += ['{class_name}']\n\n")
+        model_code.append(f"db = SQLAlchemy()\n\n\n")
         model_code.append(f"class {class_name}({self.config['model']['base_class']}):\n")
         model_code.append(f"    __tablename__ = '{self.table_name}'\n")
         model_code.append("\n")
@@ -257,6 +258,7 @@ class ModelFormGenerator:
 
         # Код формы
         form_code = [f"{imports}\n\n"]
+        form_code.append(f"__all__ += ['{class_name}Form']\n\n")
         form_code.append(f"class {form_class_name}({self.config['form']['base_class']}):\n")
 
         for column in columns_info:
@@ -301,16 +303,18 @@ class ModelFormGenerator:
 
         if output_file:
             # Записываем в файл
-            with open(output_file, 'w', encoding='utf-8') as f:
+            with open(output_file, 'w', encoding='utf-8') as file:
+                file.write('__all__ = []\n\n')
+
                 if model_code:
-                    f.write("# Модель SQLAlchemy\n")
-                    f.write(model_code)
+                    file.write("# Модель SQLAlchemy\n")
+                    file.write(model_code)
                     if form_code:
-                        f.write("\n\n")
+                        file.write("\n\n")
 
                 if form_code:
-                    f.write("# Форма WTForms\n")
-                    f.write(form_code)
+                    file.write("# Форма WTForms\n")
+                    file.write(form_code)
 
             print(f"Файл создан: {output_file}")
 
@@ -395,7 +399,7 @@ def main():
         )
 
     except Exception as e:
-        print(f"Ошибка: {e}", file=sys.stderr)
+        print(f"Ошибка {e.__class__.__name__}: {e}", file=sys.stderr)
         sys.exit(1)
 
 

@@ -11,7 +11,7 @@ extras_require = dict(
 
 setup(
     name='db-model-generator',
-    version='1.0.0',
+    version='1.0.1',
     packages=find_packages(),
     author="Маг Ильяс DOMA (MagIlyasDOMA)",
     author_email='magilyas.doma.09@list.ru',
