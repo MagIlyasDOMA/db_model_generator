@@ -7,3 +7,5 @@ data.db
 token
 /db_model_generator/test
 /db_model_generator/old
+/db_model_generator/test/config.json
+/db_model_generator/test/
