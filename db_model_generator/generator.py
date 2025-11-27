@@ -1,4 +1,4 @@
-# !/usr/bin/env python3
+#!/usr/bin/env python3
 """
 Скрипт для автоматической генерации моделей Flask-SQLAlchemy и форм WTForms
 на основе таблиц базы данных.
@@ -11,112 +11,7 @@ from typing import Optional, Union
 from sqlalchemy import create_engine, MetaData, Table, inspect
 from sqlalchemy.types import String, Integer, Float, Text, Boolean, DateTime, Date
 from deep_translator import GoogleTranslator
-
-LANGUAGES = {
-    'af': 'afrikaans',
-    'sq': 'albanian',
-    'am': 'amharic',
-    'ar': 'arabic (العربية)',
-    'hy': 'armenian (հայերեն)',
-    'az': 'azerbaijani (azərbaycan)',
-    'eu': 'basque (euskara)',
-    'be': 'belarusian (беларуская)',
-    'bn': 'bengali (বাংলা)',
-    'bs': 'bosnian (bosanski)',
-    'bg': 'bulgarian (български)',
-    'ca': 'catalan (català)',
-    'ceb': 'cebuano (cebuano)',
-    'ny': 'chichewa (chichewa)',
-    'zh-cn': 'chinese (simplified) (中文)',
-    'zh-tw': 'chinese (traditional) (中文)',
-    'co': 'corsican (corsu)',
-    'hr': 'croatian (hrvatski)',
-    'cs': 'czech (čeština)',
-    'da': 'danish (dansk)',
-    'nl': 'dutch (nederlands)',
-    'en': 'english (english)',
-    'eo': 'esperanto (esperanto)',
-    'et': 'estonian (eesti)',
-    'tl': 'filipino (filipino)',
-    'fi': 'finnish (suomi)',
-    'fr': 'french (français)',
-    'fy': 'frisian (frysk)',
-    'gl': 'galician (galego)',
-    'ka': 'georgian (ქართული)',
-    'de': 'german (deutsch)',
-    'el': 'greek (ελληνικά)',
-    'gu': 'gujarati (ગુજરાતી)',
-    'ht': 'haitian creole (kreyòl ayisyen)',
-    'ha': 'hausa (hausa)',
-    'haw': 'hawaiian (ʻōlelo hawaiʻi)',
-    'he': 'hebrew (עברית)',
-    'hi': 'hindi (हिन्दी)',
-    'hmn': 'hmong (hmong)',
-    'hu': 'hungarian (magyar)',
-    'is': 'icelandic (íslenska)',
-    'ig': 'igbo (igbo)',
-    'id': 'indonesian (bahasa indonesia)',
-    'ga': 'irish (gaeilge)',
-    'it': 'italian (italiano)',
-    'ja': 'japanese (日本語)',
-    'jw': 'javanese (basa jawa)',
-    'kn': 'kannada (ಕನ್ನಡ)',
-    'kk': 'kazakh (қазақ тілі)',
-    'km': 'khmer (ខ្មែរ)',
-    'ko': 'korean (한국어)',
-    'ku': 'kurdish (kurdî)',
-    'ky': 'kyrgyz (кыргызча)',
-    'lo': 'lao (ລາວ)',
-    'la': 'latin (latina)',
-    'lv': 'latvian (latviešu)',
-    'lt': 'lithuanian (lietuvių)',
-    'lb': 'luxembourgish (lëtzebuergesch)',
-    'mk': 'macedonian (македонски)',
-    'mg': 'malagasy (malagasy)',
-    'ms': 'malay (bahasa melayu)',
-    'ml': 'malayalam (മലയാളം)',
-    'mt': 'maltese (malti)',
-    'mi': 'maori (te reo māori)',
-    'mr': 'marathi (मराठी)',
-    'mn': 'mongolian (монгол)',
-    'my': 'myanmar (burmese) (မြန်မာ)',
-    'ne': 'nepali (नेपाली)',
-    'no': 'norwegian (norsk)',
-    'ps': 'pashto (پښتو)',
-    'fa': 'persian (فارسی)',
-    'pl': 'polish (polski)',
-    'pt': 'portuguese (português)',
-    'pa': 'punjabi (ਪੰਜਾਬੀ)',
-    'ro': 'romanian (română)',
-    'ru': 'russian (русский)',
-    'sm': 'samoan (gagana samoa)',
-    'gd': 'scots gaelic (gàidhlig)',
-    'sr': 'serbian (српски)',
-    'st': 'sesotho (sesotho)',
-    'sn': 'shona (shona)',
-    'sd': 'sindhi (سنڌي)',
-    'si': 'sinhala (සිංහල)',
-    'sk': 'slovak (slovenčina)',
-    'sl': 'slovenian (slovenščina)',
-    'so': 'somali (soomaali)',
-    'es': 'spanish (español)',
-    'su': 'sundanese (basa sunda)',
-    'sw': 'swahili (kiswahili)',
-    'sv': 'swedish (svenska)',
-    'tg': 'tajik (тоҷикӣ)',
-    'ta': 'tamil (தமிழ்)',
-    'te': 'telugu (తెలుగు)',
-    'th': 'thai (ไทย)',
-    'tr': 'turkish (türkçe)',
-    'ur': 'urdu (اردو)',
-    'uz': 'uzbek (oʻzbek)',
-    'vi': 'vietnamese (tiếng việt)',
-    'cy': 'welsh (cymraeg)',
-    'xh': 'xhosa (isiXhosa)',
-    'yi': 'yiddish (ייִדיש)',
-    'yo': 'yoruba (yorùbá)',
-    'zu': 'zulu (isiZulu)'
-}
+from .constants import LANGUAGES
 
 PathLike = Union[str, Path]
 
@@ -131,37 +26,45 @@ def translate_validator(language_code: str) -> str:
     return language_code
 
 
-
 class ModelFormGenerator:
     """Генератор моделей и форм на основе таблиц БД"""
 
     REQUIRED_ARGS = ['database_url', 'table_name']
     ALLOWED_ARGS = ['database_url', 'table_name', 'default_rename', 'only_model', 'only_form',
                     'classic_sqlalchemy', 'tab', 'translate_labels', 'label_original_language']
-    database_url: str
-    table_name: str
-    classic_sqlalchemy: bool
+    database_url: Optional[str]
+    table_name: Optional[str]
+    classic_sqlalchemy: bool = False
+    translate_labels: Optional[str] = None
+    label_original_language: str = 'en'
     _translator: Optional[GoogleTranslator] = None
 
     def __init__(self, config_path=None, **kwargs):
-        self.config = self._load_config(config_path)
+        self.config = self._load_config(config_path, kwargs)
         self._init_main_args(kwargs)
         self.engine = create_engine(self.database_url)
         self.metadata = MetaData()
 
     def _init_main_args(self, kwargs):
-        args = self.config['arguments']
-        for key, value in kwargs.items():
-            if value is not None:
-                args[key] = value
-        for key, value in args.items():
-            if key in self.REQUIRED_ARGS and value is None:
-                raise ValueError(f"Required argument {key} is missing")
-            elif key not in self.ALLOWED_ARGS:
-                raise TypeError(f"Argument {key} is invalid")
-            setattr(self, key, value)
+        """Инициализирует основные аргументы до загрузки конфигурации"""
+        # Сначала устанавливаем значения по умолчанию
+        self.database_url = None
+        self.table_name = None
+        self.classic_sqlalchemy = False
+        self.translate_labels = None
+        self.label_original_language = 'en'
 
-    def _load_config(self, config_path):
+        # Затем обновляем из kwargs
+        for key, value in kwargs.items():
+            if key in self.ALLOWED_ARGS and value is not None:
+                setattr(self, key, value)
+
+        # Проверяем обязательные аргументы
+        for key in self.REQUIRED_ARGS:
+            if getattr(self, key) is None:
+                raise ValueError(f"Required argument {key} is missing")
+
+    def _load_config(self, config_path, kwargs):
         """Загружает конфигурацию из JSON файла"""
         # Базовые настройки для Flask-SQLAlchemy
         default_config = {
@@ -205,7 +108,7 @@ class ModelFormGenerator:
                 "meta": {}
             },
             "arguments": {
-                "database": None,
+                "database_url": None,
                 "table_name": None,
                 "default_rename": False,
                 "only_model": False,
@@ -239,6 +142,7 @@ class ModelFormGenerator:
                 }
             }
 
+        # Загружаем пользовательскую конфигурацию если указан путь
         if config_path and Path(config_path).exists():
             with open(config_path, 'r', encoding='utf-8') as f:
                 user_config = json.load(f)
@@ -352,9 +256,13 @@ class ModelFormGenerator:
         imports = "\n".join(self.config["model"]["imports"])
 
         # Код модели
-        model_code = [f"{imports}\n\n", f"__all__ += ['{class_name}']\n\n", f"db = SQLAlchemy()\n\n\n",
-                      f"class {class_name}({self.config['model']['base_class']}):\n",
-                      f"\t__tablename__ = '{self.table_name}'\n", "\n"]
+        model_code = [f"{imports}\n\n"]
+
+        if not self.classic_sqlalchemy:
+            model_code.append(f"db = SQLAlchemy()\n\n")
+
+        model_code.append(f"class {class_name}({self.config['model']['base_class']}):\n")
+        model_code.append(f"    __tablename__ = '{self.table_name}'\n")
 
         for column in columns_info:
             if column['name'] in self.config["model"]["exclude_columns"]:
@@ -379,17 +287,17 @@ class ModelFormGenerator:
             # Для классического SQLAlchemy используем Column вместо db.Column
             if self.classic_sqlalchemy:
                 if params_str:
-                    model_code.append(f"\t{column['name']} = Column({sqlalchemy_type}, {params_str})\n")
+                    model_code.append(f"    {column['name']} = Column({sqlalchemy_type}, {params_str})\n")
                 else:
-                    model_code.append(f"\t{column['name']} = Column({sqlalchemy_type})\n")
+                    model_code.append(f"    {column['name']} = Column({sqlalchemy_type})\n")
             else:
                 if params_str:
-                    model_code.append(f"\t{column['name']} = db.Column({sqlalchemy_type}, {params_str})\n")
+                    model_code.append(f"    {column['name']} = db.Column({sqlalchemy_type}, {params_str})\n")
                 else:
-                    model_code.append(f"\t{column['name']} = db.Column({sqlalchemy_type})\n")
+                    model_code.append(f"    {column['name']} = db.Column({sqlalchemy_type})\n")
 
-        model_code.append("\n\tdef __repr__(self):\n")
-        model_code.append(f"\t\treturn f'<{class_name} {{self.id}}>'\n")
+        model_code.append("\n    def __repr__(self):\n")
+        model_code.append(f"        return f'<{class_name} {{self.id}}>'\n")
 
         return "".join(model_code)
 
@@ -398,8 +306,11 @@ class ModelFormGenerator:
             if not self._translator:
                 self._translator = GoogleTranslator(source=self.label_original_language,
                                                     target=self.translate_labels)
-            return self._translator.translate(text)
-
+            try:
+                return self._translator.translate(text)
+            except Exception:
+                return text
+        return text
 
     def generate_form(self, class_name=None):
         """Генерирует код формы WTForms"""
@@ -414,8 +325,8 @@ class ModelFormGenerator:
         imports = "\n".join(self.config["form"]["imports"])
 
         # Код формы
-        form_code = [f"{imports}\n\n", f"__all__ += ['{class_name}']\n\n",
-                     f"class {form_class_name}({self.config['form']['base_class']}):\n"]
+        form_code = [f"{imports}\n\n"]
+        form_code.append(f"class {form_class_name}({self.config['form']['base_class']}):\n")
 
         for column in columns_info:
             if column['name'] in self.config["model"]["exclude_columns"] or column['primary_key']:
@@ -425,21 +336,22 @@ class ModelFormGenerator:
             validators = self._generate_validators(column)
 
             # Лейбл поля (преобразуем snake_case в Normal Case)
-            label = self._translate(column['name'].replace('_', ' ').title())
+            label_text = column['name'].replace('_', ' ').title()
+            label = self._translate(label_text)
 
             # Параметры поля
             if validators:
                 validators_str = ", ".join(validators)
-                form_code.append(f"\t{column['name']} = {field_type}('{label}', validators=[{validators_str}])\n")
+                form_code.append(f"    {column['name']} = {field_type}('{label}', validators=[{validators_str}])\n")
             else:
-                form_code.append(f"\t{column['name']} = {field_type}('{label}')\n")
+                form_code.append(f"    {column['name']} = {field_type}('{label}')\n")
 
-        form_code.append("\tsubmit = SubmitField('Отправить')\n")
+        form_code.append("    submit = SubmitField('Отправить')\n")
         meta = self.config["form"]["meta"]
         if meta:
-            form_code.append('\n\tclass Meta:\n')
+            form_code.append('\n    class Meta:\n')
             for key, value in meta.items():
-                form_code.append(f'\t\t{key} = {value}\n')
+                form_code.append(f'        {key} = {value}\n')
 
         return "".join(form_code)
 
@@ -470,13 +382,19 @@ class ModelFormGenerator:
 
                 if model_code:
                     file.write("# Модель SQLAlchemy\n")
-                    file.write(tab4(model_code))
+                    if tab:
+                        file.write(tab4(model_code))
+                    else:
+                        file.write(model_code)
                     if form_code:
                         file.write("\n\n")
 
                 if form_code:
                     file.write("# Форма WTForms\n")
-                    file.write(tab4(form_code))
+                    if tab:
+                        file.write(tab4(form_code))
+                    else:
+                        file.write(form_code)
 
             print(f"Файл создан: {output_file}")
 
@@ -506,9 +424,13 @@ class ModelFormGenerator:
 def generate(database: PathLike, table_name: str, output: Optional[PathLike] = None,
              config: Optional[PathLike] = None, default_rename: bool = False,
              only_model: bool = False, only_form: bool = False,
-             classic_sqlalchemy: bool = False, tab: bool = False, translate_labels: Optional[str] = None):
+             classic_sqlalchemy: bool = False, tab: bool = False,
+             translate_labels: Optional[str] = None, **kwargs):
     if isinstance(database, Path):
         database = f'sqlite:///{database}'
+    elif not database.startswith(('sqlite:///', 'postgresql://', 'mysql://')):
+        database = f'sqlite:///{database}'
+
     if not output:
         base_name = table_name
         if only_model:
@@ -520,10 +442,12 @@ def generate(database: PathLike, table_name: str, output: Optional[PathLike] = N
 
     try:
         generator = ModelFormGenerator(
-            config,
-            database=database,
+            config_path=config,
+            database_url=database,
             table_name=table_name,
-            output=output,
+            default_rename=default_rename,
+            only_model=only_model,
+            only_form=only_form,
             classic_sqlalchemy=classic_sqlalchemy,
             translate_labels=translate_labels
         )
@@ -540,7 +464,6 @@ def generate(database: PathLike, table_name: str, output: Optional[PathLike] = N
         sys.exit(1)
 
 
-
 def main():
     parser = argparse.ArgumentParser(
         description='Генератор моделей Flask-SQLAlchemy и форм WTForms из таблиц БД'
@@ -551,19 +474,18 @@ def main():
     # Основные аргументы
     parser.add_argument('database', help='URL базы данных (например: sqlite:///example.db)')
     parser.add_argument('table_name', help='Имя таблицы для генерации')
-    parser.add_argument('output', help='Имя выходного файла', nargs='?')
-    parser.add_argument('config', help='Путь к JSON файлу конфигурации', nargs='?')
+    parser.add_argument('output', nargs='?', help='Имя выходного файла')
+    parser.add_argument('--config', '-c', help='Путь к JSON файлу конфигурации')
 
     # Опции
-    parser.add_argument('--config', '-c', help='Путь к JSON файлу конфигурации', dest='config')
     parser.add_argument('--default-rename', '-r', action='store_true',
                         help='Переименовать классы в Model и Form')
 
     # Новые опции
     only_group.add_argument('--only-model', '-m', action='store_true',
-                        help="Создать только модель")
+                            help="Создать только модель")
     only_group.add_argument('--only-form', '-f', action='store_true',
-                        help="Создать только форму")
+                            help="Создать только форму")
     parser.add_argument('--classic-sqlalchemy', '-s', action='store_true',
                         help="Создать модель sqlalchemy вместо flask_sqlalchemy")
     parser.add_argument('--tab', '-t', action='store_true',
@@ -582,7 +504,9 @@ def main():
             args.output = f"{base_name}_form.py"
         else:
             args.output = f"{base_name}.py"
+
     generate(**vars(args))
+
 
 if __name__ == "__main__":
     main()
