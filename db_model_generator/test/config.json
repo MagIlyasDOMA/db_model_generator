@@ -1,0 +1,7 @@
+{
+    "form": {
+        "meta": {
+            "csrf": false
+        }
+    }
+}

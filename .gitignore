@@ -5,3 +5,5 @@
 /db_model_generator.egg-info/
 data.db
 token
+/db_model_generator/test
+/db_model_generator/old

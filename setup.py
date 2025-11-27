@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-base_requirements = ['sqlalchemy==2.0.44']
+base_requirements = ['sqlalchemy==2.0.44', 'tab4']
 flask_requirements = ['flask~=3.1.1', 'flask-sqlalchemy==3.1.1', 'flask-wtf==1.2.2', 'wtforms==3.2.1']
 
 extras_require = dict(
@@ -11,7 +11,7 @@ extras_require = dict(
 
 setup(
     name='db-model-generator',
-    version='1.0.1',
+    version='1.1.0',
     packages=find_packages(),
     author="Маг Ильяс DOMA (MagIlyasDOMA)",
     author_email='magilyas.doma.09@list.ru',
@@ -29,5 +29,4 @@ setup(
         Source="https://github.com/MagIlyasDOMA/db_model_generator",
         Documentation="https://magilyasdoma.github.io/db_model_generator",
     ),
-
 )
