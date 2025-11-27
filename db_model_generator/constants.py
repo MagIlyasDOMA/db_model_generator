@@ -1,3 +1,5 @@
+from typing import Literal
+
 LANGUAGES = {
     'af': 'afrikaans',
     'sq': 'albanian',
@@ -103,3 +105,5 @@ LANGUAGES = {
     'yo': 'yoruba (yorùbá)',
     'zu': 'zulu (isiZulu)'
 }
+
+LanguageCodeType = Literal[*LANGUAGES.keys()]

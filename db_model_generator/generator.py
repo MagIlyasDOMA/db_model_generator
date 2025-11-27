@@ -11,9 +11,12 @@ from typing import Optional, Union
 from sqlalchemy import create_engine, MetaData, Table, inspect
 from sqlalchemy.types import String, Integer, Float, Text, Boolean, DateTime, Date
 from deep_translator import GoogleTranslator
-from .constants import LANGUAGES
+from constants import LANGUAGES, LanguageCodeType
 
 PathLike = Union[str, Path]
+PathLikeOrNone = Optional[PathLike]
+NullStr = Optional[str]
+NullBool = Optional[bool]
 
 __all__ = ['generate']
 
@@ -32,37 +35,65 @@ class ModelFormGenerator:
     REQUIRED_ARGS = ['database_url', 'table_name']
     ALLOWED_ARGS = ['database_url', 'table_name', 'default_rename', 'only_model', 'only_form',
                     'classic_sqlalchemy', 'tab', 'translate_labels', 'label_original_language']
-    database_url: Optional[str]
-    table_name: Optional[str]
-    classic_sqlalchemy: bool = False
-    translate_labels: Optional[str] = None
-    label_original_language: str = 'en'
+    # database_url: Optional[str]
+    # table_name: Optional[str]
+    # classic_sqlalchemy: bool = False
+    # translate_labels: Optional[str] = None
+    # label_original_language: str = 'en'
     _translator: Optional[GoogleTranslator] = None
 
-    def __init__(self, config_path=None, **kwargs):
+    def __init__(self,
+                 config_path: PathLike = None,
+                 database_url: NullStr = None,
+                 table_name: NullStr = None,
+                 output_path: NullStr = None,
+                 default_rename: NullBool = None,
+                 only_model: NullBool = None,
+                 only_form: NullBool = None,
+                 classic_sqlalchemy: NullBool = None,
+                 tab: NullBool = None,
+                 translate_labels: Optional[LanguageCodeType] = None,
+                 label_original_language: Optional[LanguageCodeType] = None):
+        kwargs = self.__format_kwargs(
+            database_url=database_url,
+            table_name=table_name,
+            default_rename=default_rename,
+            only_model=only_model,
+            only_form=only_form,
+            classic_sqlalchemy=classic_sqlalchemy,
+            tab=tab,
+            translate_labels=translate_labels,
+            label_original_language=label_original_language
+        )
         self.config = self._load_config(config_path, kwargs)
         self._init_main_args(kwargs)
         self.engine = create_engine(self.database_url)
         self.metadata = MetaData()
 
+    def __format_kwargs(self, **kwargs):
+        for key, value in kwargs.items():
+            if value is None:
+                del kwargs[key]
+        return kwargs
+
     def _init_main_args(self, kwargs):
         """Инициализирует основные аргументы до загрузки конфигурации"""
-        # Сначала устанавливаем значения по умолчанию
-        self.database_url = None
-        self.table_name = None
-        self.classic_sqlalchemy = False
-        self.translate_labels = None
-        self.label_original_language = 'en'
+        args = self.config['arguments']
+        args.update(kwargs)
+        self.database_url = args['database_url']
+        self.table_name = args['table_name']
+        self.default_rename = args['default_rename']
+        self.only_model = args['only_model']
+        self.only_form = args['only_form']
+        self.classic_sqlalchemy = args['classic_sqlalchemy']
+        self.tab = args['tab']
+        self.translate_labels = args['translate_labels']
+        self.label_original_language = args['label_original_language']
 
-        # Затем обновляем из kwargs
-        for key, value in kwargs.items():
-            if key in self.ALLOWED_ARGS and value is not None:
-                setattr(self, key, value)
-
-        # Проверяем обязательные аргументы
-        for key in self.REQUIRED_ARGS:
-            if getattr(self, key) is None:
-                raise ValueError(f"Required argument {key} is missing")
+        if self.database_url is None:
+            raise ValueError('database_url is required')
+        elif self.table_name is None:
+            raise ValueError('table_name is required')
 
     def _load_config(self, config_path, kwargs):
         """Загружает конфигурацию из JSON файла"""
@@ -262,7 +293,7 @@ class ModelFormGenerator:
             model_code.append(f"db = SQLAlchemy()\n\n")
 
         model_code.append(f"class {class_name}({self.config['model']['base_class']}):\n")
-        model_code.append(f"    __tablename__ = '{self.table_name}'\n")
+        model_code.append(f"\t__tablename__ = '{self.table_name}'\n")
 
         for column in columns_info:
             if column['name'] in self.config["model"]["exclude_columns"]:
@@ -287,14 +318,14 @@ class ModelFormGenerator:
             # Для классического SQLAlchemy используем Column вместо db.Column
             if self.classic_sqlalchemy:
                 if params_str:
-                    model_code.append(f"    {column['name']} = Column({sqlalchemy_type}, {params_str})\n")
+                    model_code.append(f"\t{column['name']} = Column({sqlalchemy_type}, {params_str})\n")
                 else:
-                    model_code.append(f"    {column['name']} = Column({sqlalchemy_type})\n")
+                    model_code.append(f"\t{column['name']} = Column({sqlalchemy_type})\n")
             else:
                 if params_str:
-                    model_code.append(f"    {column['name']} = db.Column({sqlalchemy_type}, {params_str})\n")
+                    model_code.append(f"\t{column['name']} = db.Column({sqlalchemy_type}, {params_str})\n")
                 else:
-                    model_code.append(f"    {column['name']} = db.Column({sqlalchemy_type})\n")
+                    model_code.append(f"\t{column['name']} = db.Column({sqlalchemy_type})\n")
 
         model_code.append("\n    def __repr__(self):\n")
         model_code.append(f"        return f'<{class_name} {{self.id}}>'\n")
@@ -342,23 +373,22 @@ class ModelFormGenerator:
             # Параметры поля
             if validators:
                 validators_str = ", ".join(validators)
-                form_code.append(f"    {column['name']} = {field_type}('{label}', validators=[{validators_str}])\n")
+                form_code.append(f"\t{column['name']} = {field_type}('{label}', validators=[{validators_str}])\n")
             else:
-                form_code.append(f"    {column['name']} = {field_type}('{label}')\n")
+                form_code.append(f"\t{column['name']} = {field_type}('{label}')\n")
 
         form_code.append("    submit = SubmitField('Отправить')\n")
         meta = self.config["form"]["meta"]
         if meta:
             form_code.append('\n    class Meta:\n')
             for key, value in meta.items():
-                form_code.append(f'        {key} = {value}\n')
+                form_code.append(f'\t\t{key} = {value}\n')
 
         return "".join(form_code)
 
-    def generate_file(self, output_file: Optional[str] = None, default_rename: bool = False,
-                      only_model: bool = False, only_form: bool = False, tab: bool = False):
+    def generate_file(self):
         """Генерирует файл с моделью и/или формой"""
-        if default_rename:
+        if self.default_rename:
             model_class_name = "Model"
             form_class_name = "Form"
         else:
@@ -369,20 +399,20 @@ class ModelFormGenerator:
         form_code = ""
 
         # Генерируем только то, что нужно
-        if not only_form:
+        if not self.only_form:
             model_code = self.generate_model(model_class_name)
 
-        if not only_model:
+        if not self.only_model:
             form_code = self.generate_form(form_class_name)
 
-        if output_file:
+        if self.output:
             # Записываем в файл
-            with open(output_file, 'w', encoding='utf-8') as file:
+            with open(self.output, 'w', encoding='utf-8') as file:
                 file.write('__all__ = []\n\n')
 
                 if model_code:
                     file.write("# Модель SQLAlchemy\n")
-                    if tab:
+                    if not self.tab:
                         file.write(tab4(model_code))
                     else:
                         file.write(model_code)
@@ -391,12 +421,12 @@ class ModelFormGenerator:
 
                 if form_code:
                     file.write("# Форма WTForms\n")
-                    if tab:
+                    if not self.tab:
                         file.write(tab4(form_code))
                     else:
                         file.write(form_code)
 
-            print(f"Файл создан: {output_file}")
+            print(f"Файл создан: {self.output}")
 
             # Информация о том, что было сгенерировано
             generated = []
@@ -449,16 +479,10 @@ def generate(database: PathLike, table_name: str, output: Optional[PathLike] = N
             only_model=only_model,
             only_form=only_form,
             classic_sqlalchemy=classic_sqlalchemy,
-            translate_labels=translate_labels
+            translate_labels=translate_labels,
+            output=output
         )
-        generator.generate_file(
-            output,
-            default_rename,
-            only_model,
-            only_form,
-            tab
-        )
-
+        generator.generate_file()
     except Exception as e:
         print(f"Ошибка {e.__class__.__name__}: {e}", file=sys.stderr)
         sys.exit(1)
@@ -475,9 +499,10 @@ def main():
     parser.add_argument('database', help='URL базы данных (например: sqlite:///example.db)')
     parser.add_argument('table_name', help='Имя таблицы для генерации')
     parser.add_argument('output', nargs='?', help='Имя выходного файла')
-    parser.add_argument('--config', '-c', help='Путь к JSON файлу конфигурации')
+    parser.add_argument('config', nargs='?', help='Путь к JSON файлу конфигурации')
 
     # Опции
+    parser.add_argument('--config', '-c', dest='config', help='Путь к JSON файлу конфигурации')
     parser.add_argument('--default-rename', '-r', action='store_true',
                         help='Переименовать классы в Model и Form')
 
@@ -494,16 +519,6 @@ def main():
                         type=translate_validator)
 
     args = parser.parse_args()
-
-    # Определяем имя выходного файла
-    if not args.output:
-        base_name = args.table_name
-        if args.only_model:
-            args.output = f"{base_name}_model.py"
-        elif args.only_form:
-            args.output = f"{base_name}_form.py"
-        else:
-            args.output = f"{base_name}.py"
 
     generate(**vars(args))
 
