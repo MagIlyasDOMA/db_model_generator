@@ -10,3 +10,6 @@ token
 /db_model_generator/test/config.json
 /db_model_generator/test/
 *.pyc
+README.md
+.env
+/test

@@ -4,12 +4,13 @@
 на основе таблиц базы данных.
 """
 
-import argparse, json, re, sys
+import argparse, json, re, sys, os
 from pathlib import Path
 from tab4 import tab4
 from typing import Optional, Union
 from sqlalchemy import create_engine, MetaData, Table, inspect
 from sqlalchemy.types import String, Integer, Float, Text, Boolean, DateTime, Date
+from dotenv import dotenv_values
 from deep_translator import GoogleTranslator
 from constants import LANGUAGES, LanguageCodeType
 
@@ -17,6 +18,10 @@ PathLike = Union[str, Path]
 PathLikeOrNone = Optional[PathLike]
 NullStr = Optional[str]
 NullBool = Optional[bool]
+os.chdir('..')
+env = dotenv_values(verbose=True)
+print(env)
+exit()
 
 __all__ = ['generate']
 
@@ -63,7 +68,8 @@ class ModelFormGenerator:
             classic_sqlalchemy=classic_sqlalchemy,
             tab=tab,
             translate_labels=translate_labels,
-            label_original_language=label_original_language
+            label_original_language=label_original_language,
+            output_path=output_path
         )
         self.config = self._load_config(config_path, kwargs)
         self._init_main_args(kwargs)
@@ -147,7 +153,8 @@ class ModelFormGenerator:
                 "classic_sqlalchemy": False,
                 "tab": False,
                 "translate_labels": None,
-                "label_original_language": "en"
+                "label_original_language": "en",
+                "output_path": None
             }
         }
 
@@ -356,8 +363,7 @@ class ModelFormGenerator:
         imports = "\n".join(self.config["form"]["imports"])
 
         # Код формы
-        form_code = [f"{imports}\n\n"]
-        form_code.append(f"class {form_class_name}({self.config['form']['base_class']}):\n")
+        form_code = [f"{imports}\n\n", f"class {form_class_name}({self.config['form']['base_class']}):\n"]
 
         for column in columns_info:
             if column['name'] in self.config["model"]["exclude_columns"] or column['primary_key']:
@@ -405,9 +411,9 @@ class ModelFormGenerator:
         if not self.only_model:
             form_code = self.generate_form(form_class_name)
 
-        if self.output:
+        if self.output_path:
             # Записываем в файл
-            with open(self.output, 'w', encoding='utf-8') as file:
+            with open(self.output_path, 'w', encoding='utf-8') as file:
                 file.write('__all__ = []\n\n')
 
                 if model_code:
@@ -426,7 +432,7 @@ class ModelFormGenerator:
                     else:
                         file.write(form_code)
 
-            print(f"Файл создан: {self.output}")
+            print(f"Файл создан: {self.output_path}")
 
             # Информация о том, что было сгенерировано
             generated = []
@@ -480,7 +486,7 @@ def generate(database: PathLike, table_name: str, output: Optional[PathLike] = N
             only_form=only_form,
             classic_sqlalchemy=classic_sqlalchemy,
             translate_labels=translate_labels,
-            output=output
+            output_path=output
         )
         generator.generate_file()
     except Exception as e:
