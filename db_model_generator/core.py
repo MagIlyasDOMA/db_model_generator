@@ -49,8 +49,14 @@ class ModelFormGenerator:
                  label_original_language: Optional[LanguageCodeType] = None,
                  log_mode: NullBool = None,
                  env: PathLikeOrNone = None):
+
+        # Инициализируем environment первым делом
         self._init_environment(env)
+
+        # Загружаем конфигурацию (теперь без использования classic_sqlalchemy)
         self.config = self._load_config(config_path)
+
+        # Инициализируем основные аргументы
         self._init_main_args(self.__format_kwargs(
             database_url=database_url,
             table_name=table_name,
@@ -64,16 +70,21 @@ class ModelFormGenerator:
             output_path=output_path,
             log_mode=log_mode
         ))
+
+        # Создаем engine и metadata
         self.engine = create_engine(self.database_url)
         self.metadata = MetaData()
 
     def _init_environment(self, env_path: PathLikeOrNone = None):
-        if env_path is undefined:
+        if env_path is not undefined:
             env = dict(dotenv_values(env_path))
             for key, value in env.items():
                 env[key.lower()] = value
                 del env[key]
             self.environment: Environment = Environment(**env)
+        else:
+            # Создаем environment с значениями по умолчанию
+            self.environment: Environment = Environment()
 
     def log(self, *values: str, sep: str = ' ', end: str = '\n', file=None, flush: bool = False):
         if self.log_mode:
@@ -86,20 +97,22 @@ class ModelFormGenerator:
         return kwargs
 
     def _init_main_args(self, kwargs):
-        """Инициализирует основные аргументы до загрузки конфигурации"""
+        """Инициализирует основные аргументы после загрузки конфигурации"""
         args = self.config['arguments']
         args.update(kwargs)
-        self.database_url = args['database_url']
-        self.table_name = args['table_name']
-        self.default_rename = args['default_rename']
-        self.only_model = args['only_model']
-        self.only_form = args['only_form']
-        self.classic_sqlalchemy = args['classic_sqlalchemy']
-        self.tab = args['tab']
-        self.translate_labels = args['translate_labels']
-        self.label_original_language = args['label_original_language']
-        self.output_path = args['output_path']
-        self.log_mode = args['log_mode']
+
+        # Устанавливаем атрибуты
+        self.database_url = args.get('database_url')
+        self.table_name = args.get('table_name')
+        self.default_rename = args.get('default_rename', False)
+        self.only_model = args.get('only_model', False)
+        self.only_form = args.get('only_form', False)
+        self.classic_sqlalchemy = args.get('classic_sqlalchemy', False)
+        self.tab = args.get('tab', False)
+        self.translate_labels = args.get('translate_labels')
+        self.label_original_language = args.get('label_original_language', 'en')
+        self.output_path = args.get('output_path')
+        self.log_mode = args.get('log_mode', False)
 
         if self.database_url is None:
             raise ValueError('database_url is required')
@@ -163,28 +176,6 @@ class ModelFormGenerator:
                 "log_mode": self.environment.log_mode,
             }
         }
-
-        # Если используется классический SQLAlchemy, меняем настройки
-        if self.classic_sqlalchemy:
-            default_config["model"] = {
-                "base_class": "Base",
-                "imports": [
-                    "from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, Date, Float",
-                    "from sqlalchemy.ext.declarative import declarative_base",
-                    "",
-                    "Base = declarative_base()"
-                ],
-                "exclude_columns": ["id", "created_at", "updated_at"],
-                "type_mapping": {
-                    "string": "String",
-                    "text": "Text",
-                    "integer": "Integer",
-                    "float": "Float",
-                    "boolean": "Boolean",
-                    "datetime": "DateTime",
-                    "date": "Date"
-                }
-            }
 
         # Загружаем пользовательскую конфигурацию если указан путь
         if config_path and Path(config_path).exists():
