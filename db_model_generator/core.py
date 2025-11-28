@@ -26,7 +26,11 @@ class Environment:
     log_mode: bool = False
 
     def __post_init__(self):
-        if self.only_model and self.only_form:
+        if not self.database_url:
+            raise ValueError('database_url is required')
+        elif not self.table_name:
+            raise ValueError('table_name is required')
+        elif self.only_model and self.only_form:
             raise ValueError('only_model and only_form are mutually exclusive')
 
 
@@ -34,6 +38,7 @@ class ModelFormGenerator:
     """Генератор моделей и форм на основе таблиц БД"""
 
     _translator: Optional[GoogleTranslator] = None
+    environment: Environment
 
     def __init__(self,
                  config_path: PathLikeOrNone = None,
@@ -68,22 +73,21 @@ class ModelFormGenerator:
         self.metadata = MetaData()
 
     def _init_environment(self, env_path: PathLikeOrNone = None):
-        if env_path is undefined:
+        if env_path is not undefined:
             env = dict(dotenv_values(env_path))
+            lower_dict = dict()
             for key, value in env.items():
-                env[key.lower()] = value
-                del env[key]
-            self.environment: Environment = Environment(**env)
+                lower_dict[key.lower()] = value
+            self.environment = Environment(**lower_dict)
+        else:
+            self.environment = Environment()
 
     def log(self, *values: str, sep: str = ' ', end: str = '\n', file=None, flush: bool = False):
         if self.log_mode:
             print(*values, sep=sep, end=end, file=file, flush=flush)
 
-    def __format_kwargs(self, **kwargs):
-        for key, value in kwargs.items():
-            if value is None:
-                del kwargs[key]
-        return kwargs
+    def __format_kwargs(self, **kwargs) -> dict:
+        return {key: value for key, value in kwargs.items() if value is not None}
 
     def _init_main_args(self, kwargs):
         """Инициализирует основные аргументы до загрузки конфигурации"""
@@ -105,6 +109,15 @@ class ModelFormGenerator:
             raise ValueError('database_url is required')
         elif self.table_name is None:
             raise ValueError('table_name is required')
+
+    def __get_classic_sqlalchemy(self, default, config_path: PathLikeOrNone = None) -> bool:
+        if config_path and Path(config_path).exists():
+            with open(config_path, 'r', encoding='utf-8') as f:
+                try:
+                    return json.load(f)['arguments']['classic_sqlalchemy']
+                except KeyError:
+                    pass
+        return default['arguments']['classic_sqlalchemy']
 
     def _load_config(self, config_path):
         """Загружает конфигурацию из JSON файла"""
@@ -165,7 +178,8 @@ class ModelFormGenerator:
         }
 
         # Если используется классический SQLAlchemy, меняем настройки
-        if self.classic_sqlalchemy:
+        if getattr(self, 'classic_sqlalchemy',
+                                     self.__get_classic_sqlalchemy(default_config, config_path)):
             default_config["model"] = {
                 "base_class": "Base",
                 "imports": [

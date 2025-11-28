@@ -29,21 +29,7 @@ def generate(database: PathLikeOrNone, table_name: str, output: PathLikeOrNone =
              classic_sqlalchemy: bool = False, tab: bool = False,
              translate_labels: Optional[LanguageCodeType] = None,
              label_original_language: Optional[LanguageCodeType] = None,
-             log_mode: bool = False, env: Union[PathLikeOrNone, UndefinedType] = None, **kwargs):
-    if isinstance(database, Path):
-        database = f'sqlite:///{database}'
-    elif not database.startswith(('sqlite:///', 'postgresql://', 'mysql://')):
-        database = f'sqlite:///{database}'
-
-    if not output:
-        base_name = table_name
-        if only_model:
-            output = f"{base_name}_model.py"
-        elif only_form:
-            output = f"{base_name}_form.py"
-        else:
-            output = f"{base_name}.py"
-
+             log_mode: bool = False, env: Union[PathLikeOrNone, UndefinedType] = None):
     try:
         generator = ModelFormGenerator(
             config_path=config,
