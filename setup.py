@@ -1,13 +1,7 @@
 from setuptools import setup, find_packages
 
-base_requirements = ['sqlalchemy==2.0.44', 'tab4']
-flask_requirements = ['flask~=3.1.1', 'flask-sqlalchemy==3.1.1', 'flask-wtf==1.2.2', 'wtforms==3.2.1']
-
-extras_require = dict(
-    base=base_requirements,
-    flask=base_requirements + flask_requirements,
-    all=base_requirements + flask_requirements
-)
+with open('README.md', encoding='utf-8') as file:
+    readme = file.read()
 
 setup(
     name='db-model-generator',
@@ -16,17 +10,76 @@ setup(
     author="Маг Ильяс DOMA (MagIlyasDOMA)",
     author_email='magilyas.doma.09@list.ru',
     description="Генератор моделей sqlalchemy из таблиц базы данных",
-    install_requires=extras_require['all'],
+    long_description=readme,
+    long_description_content_type="text/markdown",
+    license="MIT",
+    keywords=["sqlalchemy", "wtforms", "code-generation", "database", "models", "forms"],
+    classifiers=[
+        "Development Status :: 5 - Production/Stable",
+        "Intended Audience :: Developers",
+        "License :: OSI Approved :: MIT License",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
+        "Programming Language :: Python :: 3.13",
+        "Programming Language :: Python :: 3.14",
+        "Framework :: Flask",
+        "Operating System :: Microsoft :: Windows",
+        "Operating System :: Microsoft :: Windows :: Windows 10",
+        "Operating System :: Microsoft :: Windows :: Windows 11",
+        "Topic :: Database",
+        "Topic :: Database :: Database Engines/Servers",
+        "Topic :: Scientific/Engineering :: Information Analysis",
+        "Topic :: Software Development :: Libraries :: Python Modules",
+    ],
+    install_requires=[
+        "sqlalchemy==2.0.44",
+        "deep-translator>=1.11.4",
+        "tab4>=0.1.0",
+        "python-dotenv>=1.0.0",
+        "undefined-python>=1.0.0",
+        "typing-extensions>=4.0.0; python_version<'3.8'",
+    ],
     python_requires='>=3.10',
-    extras_require=extras_require,
-    entry_points=dict(
-        console_scripts=[
+    extras_require={
+        'base': [
+            "sqlalchemy==2.0.44",
+            "deep-translator>=1.11.4",
+            "tab4>=0.1.0",
+            "python-dotenv>=1.0.0",
+            "undefined-python>=1.0.0",
+            "typing-extensions>=4.0.0; python_version<'3.8'",
+        ],
+        'flask': [
+            "flask>=3.1.1,<4.0.0",
+            "flask-sqlalchemy==3.1.1",
+            "flask-wtf==1.2.2",
+            "wtforms==3.2.1",
+        ],
+        'all': [
+            "sqlalchemy==2.0.44",
+            "deep-translator>=1.11.4",
+            "tab4>=0.1.0",
+            "python-dotenv>=1.0.0",
+            "undefined-python>=1.0.0",
+            "typing-extensions>=4.0.0; python_version<'3.8'",
+            "flask>=3.1.1,<4.0.0",
+            "flask-sqlalchemy==3.1.1",
+            "flask-wtf==1.2.2",
+            "wtforms==3.2.1",
+        ],
+    },
+    entry_points={
+        'console_scripts': [
             "db-model-generator=db_model_generator.generator:main",
         ]
-    ),
+    },
     url="https://github.com/MagIlyasDOMA/db_model_generator",
-    project_urls=dict(
-        Source="https://github.com/MagIlyasDOMA/db_model_generator",
-        Documentation="https://magilyasdoma.github.io/db_model_generator",
-    ),
+    project_urls={
+        "Homepage": "https://github.com/MagIlyasDOMA/db_model_generator",
+        "Documentation": "https://magilyasdoma.github.io/db_model_generator",
+        "Repository": "https://github.com/MagIlyasDOMA/db_model_generator",
+        "Issues": "https://github.com/MagIlyasDOMA/db_model_generator/issues",
+    },
 )
