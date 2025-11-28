@@ -46,6 +46,8 @@ db-model-generator [ОПЦИИ] DATABASE TABLE_NAME [OUTPUT] [CONFIG]
 
 - `--env`, `-e` - путь к файлу окружения (.env)
 
+- `--submit-button`, `--submit`, `-s` - текст для кнопки submit (если не указан, то кнопка не добавляется)
+
 #### Примеры использования:
 ```bash
 # Базовая генерация модели и формы
@@ -65,6 +67,9 @@ db-model-generator sqlite:///example.db users --translate-labels ru
 
 # Классический SQLAlchemy вместо Flask-SQLAlchemy
 db-model-generator sqlite:///example.db users --classic-sqlalchemy
+
+# Убрать кнопку подтверждения из формы
+db-model-generator sqlite:///example.db users --submit-button "Send"
 ```
 
 ### Использование в Python
@@ -86,7 +91,8 @@ generate(
     only_model=True,
     classic_sqlalchemy=False,
     translate_labels="ru",
-    log_mode=True
+    log_mode=True,
+    submit='Send'
 )
 ```
 
@@ -116,6 +122,8 @@ generate(
 - `log_mode` (bool) - включить логирование
 
 - `env` (str, опционально) - путь к файлу окружения
+
+- `submit` (str, опционально) - текст для кнопки submit (если None, то кнопка не добавляется)
 
 ## Конфигурационный файл
 Вы можете создать JSON файл конфигурации для настройки генерации:
@@ -169,7 +177,8 @@ generate(
         "tab": false,
         "translate_labels": null,
         "label_original_language": "en",
-        "log_mode": false
+        "log_mode": false,
+        "submit": "Send"
     }
 }
 ```
@@ -222,7 +231,7 @@ from wtforms.validators import DataRequired, Email, Length, NumberRange
 class UsersForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
     email = StringField('Email', validators=[DataRequired(), Email()])
-    submit = SubmitField('Send')
+    submit = SubmitField("Отправить")
 ```
     
 ## Зависимости
@@ -233,6 +242,8 @@ class UsersForm(FlaskForm):
 - `tab4` - для форматирования кода
 
 - `python-dotenv` - для загрузки переменных окружения
+
+- `undefined-python` - для реализации некоторых функций
 
 ## Поддерживаемые СУБД
 Пакет работает с любыми СУБД, поддерживаемыми SQLAlchemy:

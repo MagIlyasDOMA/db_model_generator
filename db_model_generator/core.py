@@ -1,6 +1,7 @@
 import json
 from dataclasses import dataclass
 from pathlib import Path
+from warnings import warn
 from dotenv import dotenv_values
 from deep_translator import GoogleTranslator
 from tab4 import tab4
@@ -8,6 +9,10 @@ from sqlalchemy import create_engine, MetaData, Table, inspect
 from sqlalchemy.types import String, Integer, Float, Text, Boolean, DateTime, Date
 from pyundefined import undefined
 from .typings import *
+
+
+class MeaninglessArgumentWarning(Warning):
+    pass
 
 
 @dataclass
@@ -24,14 +29,29 @@ class Environment:
     translate_labels: Optional[LanguageCodeType] = None
     label_original_language: LanguageCodeType = 'en'
     log_mode: bool = False
+    submit: NullStr = None
 
     def __post_init__(self):
+        self.__errors()
+        self.__warnings()
+
+    def __errors(self):
         if not self.database_url:
             raise ValueError('database_url is required')
         elif not self.table_name:
             raise ValueError('table_name is required')
         elif self.only_model and self.only_form:
             raise ValueError('only_model and only_form are mutually exclusive')
+
+    def __warnings(self):
+        if ((self.label_original_language and not self.translate_labels) or
+                (self.only_model and self.label_original_language)):
+            warn('label_original_language is meaningless', MeaninglessArgumentWarning)
+        if self.only_model and self.translate_labels:
+            warn('translate_labels is meaningless', MeaninglessArgumentWarning)
+        if self.only_model and self.submit:
+            warn('submit is meaningless', MeaninglessArgumentWarning)
+
 
 
 class ModelFormGenerator:
@@ -53,7 +73,8 @@ class ModelFormGenerator:
                  translate_labels: Optional[LanguageCodeType] = None,
                  label_original_language: Optional[LanguageCodeType] = None,
                  log_mode: NullBool = None,
-                 env: PathLikeOrNone = None):
+                 env: PathLikeOrNone = None,
+                 submit: NullStr = None):
         self._init_environment(env)
         self.config = self._load_config(config_path)
         self._init_main_args(self.__format_kwargs(
@@ -67,7 +88,8 @@ class ModelFormGenerator:
             translate_labels=translate_labels,
             label_original_language=label_original_language,
             output_path=output_path,
-            log_mode=log_mode
+            log_mode=log_mode,
+            submit=submit
         ))
         self.engine = create_engine(self.database_url)
         self.metadata = MetaData()
@@ -86,7 +108,8 @@ class ModelFormGenerator:
         if self.log_mode:
             print(*values, sep=sep, end=end, file=file, flush=flush)
 
-    def __format_kwargs(self, **kwargs) -> dict:
+    @staticmethod
+    def __format_kwargs(**kwargs) -> dict:
         return {key: value for key, value in kwargs.items() if value is not None}
 
     def _init_main_args(self, kwargs):
@@ -104,13 +127,10 @@ class ModelFormGenerator:
         self.label_original_language = args['label_original_language']
         self.output_path = args['output_path']
         self.log_mode = args['log_mode']
+        self.submit = args['submit']
 
-        if self.database_url is None:
-            raise ValueError('database_url is required')
-        elif self.table_name is None:
-            raise ValueError('table_name is required')
-
-    def __get_classic_sqlalchemy(self, default, config_path: PathLikeOrNone = None) -> bool:
+    @staticmethod
+    def __get_classic_sqlalchemy(default, config_path: PathLikeOrNone = None) -> bool:
         if config_path and Path(config_path).exists():
             with open(config_path, 'r', encoding='utf-8') as f:
                 try:
@@ -174,6 +194,7 @@ class ModelFormGenerator:
                 "label_original_language": self.environment.label_original_language,
                 "output_path": self.environment.output_path,
                 "log_mode": self.environment.log_mode,
+                "submit": self.environment.submit
             }
         }
 
@@ -281,7 +302,8 @@ class ModelFormGenerator:
         else:
             return field_mapping["string"]
 
-    def _generate_validators(self, column_info):
+    @staticmethod
+    def _generate_validators(column_info):
         """Генерирует валидаторы для поля формы"""
         validators = []
 
@@ -299,7 +321,8 @@ class ModelFormGenerator:
 
         return validators
 
-    def _to_camel_case(self, name):
+    @staticmethod
+    def _to_camel_case(name):
         """Преобразует snake_case в CamelCase"""
         return ''.join(word.capitalize() for word in name.split('_'))
 
@@ -403,7 +426,8 @@ class ModelFormGenerator:
             else:
                 form_code.append(f"\t{column['name']} = {field_type}('{label}')\n")
 
-        form_code.append("    submit = SubmitField('Отправить')\n")
+        if self.submit is not None:
+            form_code.append(f"    submit = SubmitField(\"{self.submit}\")\n")
         meta = self.config["form"]["meta"]
         if meta:
             form_code.append('\n    class Meta:\n')

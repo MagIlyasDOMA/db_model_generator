@@ -5,7 +5,7 @@ with open('README.md', encoding='utf-8') as file:
 
 setup(
     name='db-model-generator',
-    version='1.2.0',
+    version='1.2.2',
     packages=find_packages(),
     author="Маг Ильяс DOMA (MagIlyasDOMA)",
     author_email='magilyas.doma.09@list.ru',
@@ -48,7 +48,7 @@ setup(
             "deep-translator>=1.11.4",
             "tab4>=0.1.0",
             "python-dotenv>=1.0.0",
-            "undefined-python>=1.0.0",
+            "undefined-python>=1.1.0",
             "typing-extensions>=4.0.0; python_version<'3.8'",
         ],
         'flask': [

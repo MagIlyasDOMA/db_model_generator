@@ -14,3 +14,4 @@ token
 /test
 /db_model_generator/db_model_generator.egg-info
 pyproject_.toml
+/archive/

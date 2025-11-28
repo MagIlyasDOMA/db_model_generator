@@ -10,7 +10,7 @@ from typing import Union
 from pyundefined import UndefinedType, undefined
 from db_model_generator.constants import LANGUAGES
 from db_model_generator.core import ModelFormGenerator
-from db_model_generator.typings import PathLikeOrNone, Optional, LanguageCodeType
+from db_model_generator.typings import PathLikeOrNone, Optional, LanguageCodeType, NullStr
 
 __all__ = ['generate']
 
@@ -29,7 +29,45 @@ def generate(database: PathLikeOrNone, table_name: str, output: PathLikeOrNone =
              classic_sqlalchemy: bool = False, tab: bool = False,
              translate_labels: Optional[LanguageCodeType] = None,
              label_original_language: Optional[LanguageCodeType] = None,
-             log_mode: bool = False, env: Union[PathLikeOrNone, UndefinedType] = None):
+             log_mode: bool = False, env: Union[PathLikeOrNone, UndefinedType] = None,
+             submit: NullStr = None):
+    """
+   Генерирует модели SQLAlchemy и формы WTForms на основе таблицы базы данных.
+
+   :param database: URL базы данных для подключения
+   :type database: str
+   :param table_name: Имя таблицы для генерации моделей и форм
+   :type table_name: str
+   :param output: Путь к выходному файлу для сохранения результата
+   :type output: str или None
+   :param config: Путь к JSON файлу конфигурации с настройками генерации
+   :type config: str или None
+   :param default_rename: Переименовать классы в Model и Form
+   :type default_rename: bool
+   :param only_model: Генерировать только модель SQLAlchemy
+   :type only_model: bool
+   :param only_form: Генерировать только форму WTForms
+   :type only_form: bool
+   :param classic_sqlalchemy: Использовать классический SQLAlchemy вместо Flask-SQLAlchemy
+   :type classic_sqlalchemy: bool
+   :param tab: Использовать символ табуляции \\t вместо пробелов для форматирования
+   :type tab: bool
+   :param translate_labels: Код языка для перевода labels в форме (например: 'ru', 'es', 'fr')
+   :type translate_labels: str или None
+   :param label_original_language: Исходный язык labels для перевода (по умолчанию 'en')
+   :type label_original_language: str
+   :param log_mode: Включить режим логирования для отладки
+   :type log_mode: bool
+   :param env: Путь к файлу окружения (.env) для загрузки переменных
+   :type env: str или None
+   :param submit: Текст для кнопки submit в форме (если None, кнопка не добавляется)
+   :type submit: str или None
+
+   :raises ValueError: Если не указаны обязательные параметры database или table_name
+   :raises ConnectionError: Если не удается подключиться к указанной базе данных
+   :raises TableNotFoundError: Если указанная таблица не существует в базе данных
+    """
+
     try:
         generator = ModelFormGenerator(
             config_path=config,
@@ -44,7 +82,8 @@ def generate(database: PathLikeOrNone, table_name: str, output: PathLikeOrNone =
             tab=tab,
             label_original_language=label_original_language,
             log_mode=log_mode,
-            env=env
+            env=env,
+            submit=submit
         )
         generator.generate_file()
     except Exception as e:
@@ -91,6 +130,8 @@ def main():
     parser.add_argument('--version', '-v', action='version', version=__version__)
     parser.add_argument('--env', '-e', nargs='?', const=None, default=undefined,
                         help="Путь к файлу")
+    parser.add_argument('--submit-button', '--submit', '-b', const="Отправить",
+                        help="Добавить кнопку submit в форму", dest='submit', nargs='?')
 
     args = parser.parse_args()
 
