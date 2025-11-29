@@ -1,11 +1,29 @@
+import sys, os, shutil, time
 from setuptools import setup, find_packages
+
+
+def clean():
+    if '--clean' in sys.argv:
+        sys.argv.remove('--clean')
+        # Удаляем build, dist и .egg-info директории
+        dirs_to_remove = ['build', 'dist']
+        # Добавляем .egg-info директории
+        dirs_to_remove.extend([d for d in os.listdir('.')
+                               if d.endswith('.egg-info')])
+
+        for dir_name in dirs_to_remove:
+            if os.path.exists(dir_name):
+                shutil.rmtree(dir_name)
+                print(f"Удалена директория {dir_name}")
+        time.sleep(1.5)
 
 with open('README.md', encoding='utf-8') as file:
     readme = file.read()
 
+clean()
 setup(
     name='db-model-generator',
-    version='1.2.3',
+    version='1.2.4',
     packages=find_packages(),
     author="Маг Ильяс DOMA (MagIlyasDOMA)",
     author_email='magilyas.doma.09@list.ru',

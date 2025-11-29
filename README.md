@@ -175,6 +175,9 @@ generate(
         "meta": {}
     },
     "arguments": {
+        "database": "sqlite:///example.db",
+        "table_name": "users",
+        "output": "models.py",
         "default_rename": false,
         "only_model": false,
         "only_form": false,

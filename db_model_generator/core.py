@@ -9,10 +9,7 @@ from sqlalchemy import create_engine, MetaData, Table, inspect
 from sqlalchemy.types import String, Integer, Float, Text, Boolean, DateTime, Date
 from pyundefined import undefined
 from .typings import *
-
-
-class MeaninglessArgumentWarning(Warning):
-    pass
+from .warnings import MeaninglessArgumentWarning
 
 
 @dataclass
@@ -43,9 +40,13 @@ class Environment:
         elif self.only_model and self.only_form:
             raise ValueError('only_model and only_form are mutually exclusive')
 
+    @property
+    def __label_original_language(self):
+        return self.label_original_language != 'en'
+
     def __warnings(self):
-        if ((self.label_original_language and not self.translate_labels) or
-                (self.only_model and self.label_original_language)):
+        if ((self.__label_original_language and not self.translate_labels) or
+                (self.only_model and self.__label_original_language)):
             warn('label_original_language is meaningless', MeaninglessArgumentWarning)
         if self.only_model and self.translate_labels:
             warn('translate_labels is meaningless', MeaninglessArgumentWarning)

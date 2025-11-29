@@ -4,13 +4,13 @@
 на основе таблиц базы данных.
 """
 
-import argparse, sys
-from pathlib import Path
+import argparse, sys, warnings
 from typing import Union
 from pyundefined import UndefinedType, undefined
 from db_model_generator.constants import LANGUAGES_RU as LANGUAGES
 from db_model_generator.core import ModelFormGenerator
 from db_model_generator.typings import PathLikeOrNone, Optional, LanguageCodeType, NullStr
+from db_model_generator.warnings import ExtraKwargsWarning
 
 __all__ = ['generate']
 
@@ -30,7 +30,7 @@ def generate(database: PathLikeOrNone, table_name: str, output: PathLikeOrNone =
              translate_labels: Optional[LanguageCodeType] = None,
              label_original_language: Optional[LanguageCodeType] = None,
              log_mode: bool = False, env: Union[PathLikeOrNone, UndefinedType] = None,
-             submit: NullStr = None):
+             submit: NullStr = None, **kwargs) -> None:
     """
    Генерирует модели SQLAlchemy и формы WTForms на основе таблицы базы данных.
 
@@ -69,6 +69,10 @@ def generate(database: PathLikeOrNone, table_name: str, output: PathLikeOrNone =
     """
 
     try:
+        if kwargs:
+            kwargs_str = ', '.join([f'{k}={repr(v)}' for k, v in kwargs.items()])
+            kwargs_str = f'({kwargs_str})'
+            warnings.warn(f"Указаны лишние аргументы: {kwargs_str}", stacklevel=2, category=ExtraKwargsWarning)
         generator = ModelFormGenerator(
             config_path=config,
             database_url=database,
@@ -101,6 +105,8 @@ def all_langs(arg: bool):
 
 def main():
     from db_model_generator import __version__
+
+    warnings.filterwarnings("ignore", category=ExtraKwargsWarning)
 
     parser = argparse.ArgumentParser(description='Генератор моделей Flask-SQLAlchemy и форм WTForms из таблиц базы данных')
 
