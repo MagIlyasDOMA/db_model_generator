@@ -1,6 +1,6 @@
 from pathlib import Path
 from typing import Union, Optional, Literal
-from .constants import LANGUAGES
+from .constants import LANGUAGES_RU as LANGUAGES
 
 __all__ = [
     'PathLike',

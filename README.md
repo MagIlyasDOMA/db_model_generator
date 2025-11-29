@@ -48,6 +48,8 @@ db-model-generator [ОПЦИИ] DATABASE TABLE_NAME [OUTPUT] [CONFIG]
 
 - `--submit-button`, `--submit`, `-s` - текст для кнопки submit (если не указан, то кнопка не добавляется)
 
+- `--all-langs` - показать все доступные языки для перевода форм. В случае использования программа покажет все доступные языки и завершит работу
+
 #### Примеры использования:
 ```bash
 # Базовая генерация модели и формы
@@ -70,6 +72,9 @@ db-model-generator sqlite:///example.db users --classic-sqlalchemy
 
 # Убрать кнопку подтверждения из формы
 db-model-generator sqlite:///example.db users --submit-button "Send"
+
+# Показать все доступные языки
+db-model-generator --all-langs
 ```
 
 ### Использование в Python

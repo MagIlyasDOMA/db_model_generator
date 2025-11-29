@@ -5,7 +5,7 @@ with open('README.md', encoding='utf-8') as file:
 
 setup(
     name='db-model-generator',
-    version='1.2.2',
+    version='1.2.3',
     packages=find_packages(),
     author="Маг Ильяс DOMA (MagIlyasDOMA)",
     author_email='magilyas.doma.09@list.ru',

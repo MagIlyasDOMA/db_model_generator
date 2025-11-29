@@ -8,7 +8,7 @@ import argparse, sys
 from pathlib import Path
 from typing import Union
 from pyundefined import UndefinedType, undefined
-from db_model_generator.constants import LANGUAGES
+from db_model_generator.constants import LANGUAGES_RU as LANGUAGES
 from db_model_generator.core import ModelFormGenerator
 from db_model_generator.typings import PathLikeOrNone, Optional, LanguageCodeType, NullStr
 
@@ -91,6 +91,14 @@ def generate(database: PathLikeOrNone, table_name: str, output: PathLikeOrNone =
         sys.exit(1)
 
 
+def all_langs(arg: bool):
+    if arg:
+        print("db-model-generator поддерживает следующие языки:\n")
+        for key, value in LANGUAGES.items():
+            print(f"\t{key}: {value.capitalize()}")
+        sys.exit(0)
+
+
 def main():
     from db_model_generator import __version__
 
@@ -132,8 +140,11 @@ def main():
                         help="Путь к файлу")
     parser.add_argument('--submit-button', '--submit', '-b', const="Отправить",
                         help="Добавить кнопку submit в форму", dest='submit', nargs='?')
+    parser.add_argument('--all-langs', action='store_true',
+                        help="Показать все доступные языки для перевода форм. В случае использования программа покажет все доступные языки и завершит работу")
 
     args = parser.parse_args()
+    all_langs(args.all_langs)
 
     generate(**vars(args))
 
