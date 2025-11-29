@@ -128,14 +128,30 @@ class ModelFormGenerator:
             suffix = ''
         return Path(self.table_name + suffix + '.py')
 
+    @staticmethod
+    def __database_url(url: str) -> str:
+        if not url:
+            raise ValueError('database_url is required')
+        if url.startswith('sqlite:///'):
+            url = url.replace('sqlite:///', '')
+            if not Path(url).exists():
+                raise FileNotFoundError('SQLite database does not exist')
+        return url
+
+    @staticmethod
+    def __table_name(table_name: str) -> str:
+        if not table_name:
+            raise ValueError('table_name is required')
+        return table_name
+
     def _init_main_args(self, kwargs):
         """Инициализирует основные аргументы до загрузки конфигурации"""
         args = self.config['arguments']
         for key, value in kwargs.items():
             if value:
                 args[key] = value
-        self.database_url = args['database_url']
-        self.table_name = args['table_name']
+        self.database_url = self.__database_url(args['database_url'])
+        self.table_name = self.__table_name(args['table_name'])
         self.default_rename = args['default_rename']
         self.only_model = args['only_model']
         self.only_form = args['only_form']
@@ -146,11 +162,6 @@ class ModelFormGenerator:
         self.output_path: Path = self.__output_path(args['output_path'])
         self.log_mode = args['log_mode']
         self.submit = args['submit']
-
-        if not self.database_url:
-            raise ValueError('database_url is required')
-        elif not self.table_name:
-            raise ValueError('table_name is required')
 
     @staticmethod
     def __get_classic_sqlalchemy(default, config_path: PathLikeOrNone = None) -> bool:
