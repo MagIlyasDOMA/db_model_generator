@@ -105,7 +105,6 @@ class ModelFormGenerator:
                         value = False
                 lower_dict[key.lower()] = value
             lower_dict = self.__fix_args_keys(lower_dict)
-            print(lower_dict)
             self.environment = Environment(**lower_dict)
         else:
             self.environment = Environment()
