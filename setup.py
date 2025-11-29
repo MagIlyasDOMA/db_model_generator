@@ -15,7 +15,7 @@ def clean():
             if os.path.exists(dir_name):
                 shutil.rmtree(dir_name)
                 print(f"Удалена директория {dir_name}")
-        time.sleep(1.5)
+        time.sleep(0.5)
 
 with open('README.md', encoding='utf-8') as file:
     readme = file.read()
