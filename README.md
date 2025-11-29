@@ -264,7 +264,12 @@ generate(
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 
+__all__ = []
+
 db = SQLAlchemy()
+
+__all__ += ['Users']
+
 
 class Users(db.Model):
     __tablename__ = 'users'
@@ -281,6 +286,9 @@ class Users(db.Model):
 from flask_wtf import FlaskForm
 from wtforms import StringField, TextAreaField, IntegerField, FloatField, BooleanField, DateField, DateTimeField, SelectField, SubmitField
 from wtforms.validators import DataRequired, Email, Length, NumberRange
+
+__all__ += ['UsersForm']
+
 
 class UsersForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])

@@ -17,13 +17,14 @@ def clean():
                 print(f"Удалена директория {dir_name}")
         time.sleep(0.5)
 
+
 with open('README.md', encoding='utf-8') as file:
     readme = file.read()
 
 clean()
 setup(
     name='db-model-generator',
-    version='1.3.2',
+    version='1.3.3',
     packages=find_packages(),
     author="Маг Ильяс DOMA (MagIlyasDOMA)",
     author_email='magilyas.doma.09@list.ru',

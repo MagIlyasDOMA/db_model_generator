@@ -390,6 +390,7 @@ class ModelFormGenerator:
         if not self.classic_sqlalchemy:
             model_code.append(f"db = SQLAlchemy()\n\n")
 
+        model_code.append(f"__all__ = ['{class_name}']\n\n\n")
         model_code.append(f"class {class_name}({self.config['model']['base_class']}):\n")
         model_code.append(f"\t__tablename__ = '{self.table_name}'\n")
 
@@ -454,7 +455,7 @@ class ModelFormGenerator:
         imports = "\n".join(self.config["form"]["imports"])
 
         # Код формы
-        form_code = [f"{imports}\n\n", f"class {form_class_name}({self.config['form']['base_class']}):\n"]
+        form_code = [f"{imports}\n\n", f"__all__ = ['{form_class_name}']\n\n\n", f"class {form_class_name}({self.config['form']['base_class']}):\n"]
 
         for column in columns_info:
             if column['name'] in self.config["model"]["exclude_columns"] or column['primary_key']:
@@ -495,18 +496,13 @@ class ModelFormGenerator:
 
         model_code = ""
         form_code = ""
-        suffix = ''
 
         # Генерируем только то, что нужно
         if not self.only_form:
             model_code = self.generate_model(model_class_name)
-        else:
-            suffix = '_form'
 
         if not self.only_model:
             form_code = self.generate_form(form_class_name)
-        else:
-            suffix = '_model'
 
         if self.output_path:
             # Записываем в файл
