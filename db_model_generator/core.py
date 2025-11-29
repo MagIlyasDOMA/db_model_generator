@@ -133,8 +133,8 @@ class ModelFormGenerator:
         if not url:
             raise ValueError('database_url is required')
         if url.startswith('sqlite:///'):
-            url = url.replace('sqlite:///', '')
-            if not Path(url).exists():
+            path = url.replace('sqlite:///', '')
+            if not Path(path).exists():
                 raise FileNotFoundError('SQLite database does not exist')
         return url
 
