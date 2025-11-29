@@ -70,12 +70,58 @@ db-model-generator sqlite:///example.db users --translate-labels ru
 # Классический SQLAlchemy вместо Flask-SQLAlchemy
 db-model-generator sqlite:///example.db users --classic-sqlalchemy
 
-# Убрать кнопку подтверждения из формы
+# Добавить кнопку подтверждения в форму
 db-model-generator sqlite:///example.db users --submit-button "Send"
 
 # Показать все доступные языки
 db-model-generator --all-langs
 ```
+
+### Использование env-файлов
+Пакет поддерживает загрузку аргументов из файлов окружения (.env). Для этого используйте опцию --env или укажите путь к файлу в параметре env при вызове функции.
+
+#### Поддерживаемые переменные окружения:
+
+`DATABASE_URL` или `DATABASE` - URL базы данных
+
+`TABLE_NAME` - имя таблицы для генерации
+
+`OUTPUT_PATH` или `OUTPUT` - путь к выходному файлу
+
+`DEFAULT_RENAME` - переименовать классы в Model и Form (true/false)
+
+`ONLY_MODEL` - генерировать только модель (true/false)
+
+`ONLY_FORM` - генерировать только форму (true/false)
+
+`CLASSIC_SQLALCHEMY` - использовать классический SQLAlchemy (true/false)
+
+`TAB` - использовать табуляцию вместо пробелов (true/false)
+
+`TRANSLATE_LABELS` - код языка для перевода labels
+
+`LABEL_ORIGINAL_LANGUAGE` - исходный язык labels
+
+`LOG_MODE` - включить логирование (true/false)
+
+`SUBMIT` - текст для кнопки submit
+
+#### Пример .env-файла
+```dotenv
+DATABASE_URL=sqlite:///example.db
+TABLE_NAME=users
+OUTPUT_PATH=models.py
+DEFAULT_RENAME=false
+ONLY_MODEL=false
+ONLY_FORM=false
+CLASSIC_SQLALCHEMY=false
+TAB=false
+TRANSLATE_LABELS=ru
+LABEL_ORIGINAL_LANGUAGE=en
+LOG_MODE=true
+SUBMIT=Отправить
+```
+
 
 ### Использование в Python
 ```python

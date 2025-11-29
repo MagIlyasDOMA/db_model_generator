@@ -66,6 +66,7 @@ def generate(database: PathLikeOrNone, table_name: str, output: PathLikeOrNone =
    :raises ValueError: Если не указаны обязательные параметры database или table_name
    :raises ConnectionError: Если не удается подключиться к указанной базе данных
    :raises TableNotFoundError: Если указанная таблица не существует в базе данных
+   :raises JSONDecodeError: Если есть ошибки в конфигурационном файле
     """
 
     try:

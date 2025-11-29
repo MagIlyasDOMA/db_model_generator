@@ -33,11 +33,7 @@ class Environment:
         self.__warnings()
 
     def __errors(self):
-        if not self.database_url:
-            raise ValueError('database_url is required')
-        elif not self.table_name:
-            raise ValueError('table_name is required')
-        elif self.only_model and self.only_form:
+        if self.only_model and self.only_form:
             raise ValueError('only_model and only_form are mutually exclusive')
 
     @property
@@ -77,6 +73,8 @@ class ModelFormGenerator:
                  env: PathLikeOrNone = None,
                  submit: NullStr = None):
         self._init_environment(env)
+        if not config_path:
+            config_path = self.environment.config_path
         self.config = self._load_config(config_path)
         self._init_main_args(self.__format_kwargs(
             database_url=database_url,
@@ -100,7 +98,14 @@ class ModelFormGenerator:
             env = dict(dotenv_values(env_path))
             lower_dict = dict()
             for key, value in env.items():
+                if isinstance(value, str):
+                    if value.lower() == 'true' or value == '1':
+                        value = True
+                    elif value.lower() == 'false' or value == '0':
+                        value = False
                 lower_dict[key.lower()] = value
+            lower_dict = self.__fix_args_keys(lower_dict)
+            print(lower_dict)
             self.environment = Environment(**lower_dict)
         else:
             self.environment = Environment()
@@ -113,10 +118,23 @@ class ModelFormGenerator:
     def __format_kwargs(**kwargs) -> dict:
         return {key: value for key, value in kwargs.items() if value is not None}
 
+    def __output_path(self, path: PathLikeOrNone = None) -> Path:
+        if path:
+            return Path(path)
+        if self.only_model:
+            suffix = '_model'
+        elif self.only_form:
+            suffix = '_form'
+        else:
+            suffix = ''
+        return Path(self.table_name + suffix + '.py')
+
     def _init_main_args(self, kwargs):
         """Инициализирует основные аргументы до загрузки конфигурации"""
         args = self.config['arguments']
-        args.update(kwargs)
+        for key, value in kwargs.items():
+            if value:
+                args[key] = value
         self.database_url = args['database_url']
         self.table_name = args['table_name']
         self.default_rename = args['default_rename']
@@ -126,9 +144,14 @@ class ModelFormGenerator:
         self.tab = args['tab']
         self.translate_labels = args['translate_labels']
         self.label_original_language = args['label_original_language']
-        self.output_path = args['output_path']
+        self.output_path: Path = self.__output_path(args['output_path'])
         self.log_mode = args['log_mode']
         self.submit = args['submit']
+
+        if not self.database_url:
+            raise ValueError('database_url is required')
+        elif not self.table_name:
+            raise ValueError('table_name is required')
 
     @staticmethod
     def __get_classic_sqlalchemy(default, config_path: PathLikeOrNone = None) -> bool:
@@ -223,13 +246,27 @@ class ModelFormGenerator:
             }
 
         # Загружаем пользовательскую конфигурацию если указан путь
-        if config_path and Path(config_path).exists():
-            with open(config_path, 'r', encoding='utf-8') as f:
-                user_config = json.load(f)
-                # Рекурсивно обновляем конфигурацию по умолчанию
-                self._update_config(default_config, user_config)
+        if config_path:
+            if Path(config_path).exists():
+                with open(config_path, 'r', encoding='utf-8') as f:
+                    user_config = json.load(f)
+                    user_config['arguments'] = self.__fix_args_keys(user_config.get('arguments', {}))
+                    self._update_config(default_config, user_config)
+            else:
+                warn("Конфигурационного файла не существует", UserWarning, 3)
 
         return default_config
+
+    @staticmethod
+    def __fix_args_keys(args: dict):
+        arguments = args.copy()
+        if 'database' in arguments:
+            arguments['database_url'] = arguments['database']
+            del arguments['database']
+        if 'output' in arguments:
+            arguments['output_path'] = arguments['output']
+            del arguments['output']
+        return arguments
 
     def _update_config(self, default, user):
         """Рекурсивно обновляет конфигурацию по умолчанию пользовательской"""
@@ -448,13 +485,18 @@ class ModelFormGenerator:
 
         model_code = ""
         form_code = ""
+        suffix = ''
 
         # Генерируем только то, что нужно
         if not self.only_form:
             model_code = self.generate_model(model_class_name)
+        else:
+            suffix = '_form'
 
         if not self.only_model:
             form_code = self.generate_form(form_class_name)
+        else:
+            suffix = '_model'
 
         if self.output_path:
             # Записываем в файл
