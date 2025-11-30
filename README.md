@@ -50,6 +50,12 @@ db-model-generator [ОПЦИИ] DATABASE TABLE_NAME [OUTPUT] [CONFIG]
 
 - `--all-langs` - показать все доступные языки для перевода форм. В случае использования программа покажет все доступные языки и завершит работу
 
+- `--non-rewritable`, `--file-protect`, `-p` - отметить файл как неперезаписываемый
+
+- `--ignore-and-rewrite`, `-i` - перезаписать файл в любом случае
+
+- `--debug`, `-d` - включить режим отладки
+
 #### Примеры использования:
 ```bash
 # Базовая генерация модели и формы
@@ -75,6 +81,15 @@ db-model-generator sqlite:///example.db users --submit-button "Send"
 
 # Показать все доступные языки
 db-model-generator --all-langs
+
+# Защита файла от перезаписи
+db-model-generator sqlite:///example.db users --non-rewritable
+
+# Принудительная перезапись файла
+db-model-generator sqlite:///example.db users --ignore-and-rewrite
+
+# Режим отладки с подробными ошибками
+db-model-generator sqlite:///example.db users --debug
 ```
 
 ### Использование env-файлов
@@ -106,6 +121,10 @@ db-model-generator --all-langs
 
 `SUBMIT` - текст для кнопки submit
 
+`NON_REWRITABLE` - защита файла от перезаписи (true/false)
+
+`IGNORE_AND_REWRITE` - принудительная перезапись файла (true/false)
+
 #### Пример .env-файла
 ```dotenv
 DATABASE_URL=sqlite:///example.db
@@ -120,6 +139,8 @@ TRANSLATE_LABELS=ru
 LABEL_ORIGINAL_LANGUAGE=en
 LOG_MODE=true
 SUBMIT=Отправить
+NON_REWRITABLE=false
+IGNORE_AND_REWRITE=false
 ```
 
 
@@ -143,7 +164,10 @@ generate(
     classic_sqlalchemy=False,
     translate_labels="ru",
     log_mode=True,
-    submit='Send'
+    submit='Send',
+    non_rewritable=False,
+    ignore_and_rewrite=True,
+    debug=False
 )
 ```
 
@@ -175,6 +199,12 @@ generate(
 - `env` (str, опционально) - путь к файлу окружения
 
 - `submit` (str, опционально) - текст для кнопки submit (если None, то кнопка не добавляется)
+
+- `non_rewritable` (bool) - защита файла от перезаписи
+
+- `ignore_and_rewrite` (bool) - принудительная перезапись файла
+
+- `debug` (bool) - включить режим отладки
 
 ## Конфигурационный файл
 Вы можете создать JSON файл конфигурации для настройки генерации:
@@ -232,7 +262,9 @@ generate(
         "translate_labels": null,
         "label_original_language": "en",
         "log_mode": false,
-        "submit": "Send"
+        "submit": "Send",
+        "non_rewritable": false,
+        "ignore_and_rewrite": false
     }
 }
 ```
@@ -260,15 +292,17 @@ generate(
 Для таблицы users с колонками id, username, email, created_at:
 
 ```python
+# Файл сгенерирован db-model-generator 30.11.2025 13:46:39
+# Путь к базе данных: example.db
+# Название таблицы: programs
+
+__all__ = ['Users', 'UsersForm']
+
 # Модель SQLAlchemy
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 
-__all__ = []
-
 db = SQLAlchemy()
-
-__all__ += ['Users']
 
 
 class Users(db.Model):
@@ -287,13 +321,11 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, TextAreaField, IntegerField, FloatField, BooleanField, DateField, DateTimeField, SelectField, SubmitField
 from wtforms.validators import DataRequired, Email, Length, NumberRange
 
-__all__ += ['UsersForm']
-
 
 class UsersForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
     email = StringField('Email', validators=[DataRequired(), Email()])
-    submit = SubmitField("Отправить")
+    submit = SubmitField("Send")
 ```
     
 ## Зависимости
@@ -321,4 +353,19 @@ class UsersForm(FlaskForm):
 - Microsoft SQL Server
 
 - и другие
+
+## Обработка ошибок
+### Режим отладки
+При использовании опции --debug или -d пакет выводит полную трассировку стека ошибок, что полезно для диагностики проблем.
+
+### Защита файлов
+--non-rewritable - предотвращает случайную перезапись существующих файлов
+
+--ignore-and-rewrite - принудительно перезаписывает файлы, игнорируя защиту
+
+### Логирование
+Опция --log-mode включает подробное логирование процесса генерации, что помогает отслеживать каждый этап работы пакета.
+
+### Версия
+Текущая версия пакета: 1.4.0
 

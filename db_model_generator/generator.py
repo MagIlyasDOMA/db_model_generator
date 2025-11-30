@@ -4,7 +4,7 @@
 на основе таблиц базы данных.
 """
 
-import argparse, sys, warnings
+import argparse, sys, warnings, traceback
 from typing import Union
 from pyundefined import UndefinedType, undefined
 from db_model_generator.constants import LANGUAGES_RU as LANGUAGES
@@ -13,6 +13,8 @@ from db_model_generator.typings import PathLikeOrNone, Optional, LanguageCodeTyp
 from db_model_generator.warnings import ExtraKwargsWarning
 
 __all__ = ['generate']
+
+DEBUG = True
 
 
 def translate_validator(language_code: str) -> str:
@@ -30,7 +32,8 @@ def generate(database: PathLikeOrNone, table_name: str, output: PathLikeOrNone =
              translate_labels: Optional[LanguageCodeType] = None,
              label_original_language: Optional[LanguageCodeType] = None,
              log_mode: bool = False, env: Union[PathLikeOrNone, UndefinedType] = None,
-             submit: NullStr = None, **kwargs) -> None:
+             submit: NullStr = None, non_rewritable: bool = False,
+             ignore_and_rewrite: bool = False, debug: bool = False, **kwargs) -> None:
     """
    Генерирует модели SQLAlchemy и формы WTForms на основе таблицы базы данных.
 
@@ -88,11 +91,16 @@ def generate(database: PathLikeOrNone, table_name: str, output: PathLikeOrNone =
             label_original_language=label_original_language,
             log_mode=log_mode,
             env=env,
-            submit=submit
+            submit=submit,
+            non_rewritable=non_rewritable,
+            ignore_and_rewrite=ignore_and_rewrite
         )
         generator.generate_file()
     except Exception as e:
-        print(f"Ошибка {e.__class__.__name__}: {e}", file=sys.stderr)
+        if debug:
+            raise e
+        else:
+            print(f"Ошибка {e.__class__.__name__}: {e}", file=sys.stderr)
         sys.exit(1)
 
 
@@ -149,6 +157,12 @@ def main():
                         help="Добавить кнопку submit в форму", dest='submit', nargs='?')
     parser.add_argument('--all-langs', action='store_true',
                         help="Показать все доступные языки для перевода форм. В случае использования программа покажет все доступные языки и завершит работу")
+    parser.add_argument('--non-rewritable', '--file-protect', '-p',
+                        dest='non_rewritable', action='store_true',
+                        help="Отметить файл как неперезаписываемый")
+    parser.add_argument('--ignore-and-rewrite', '-i', action='store_true',
+                        help="Перезаписать файл в любом случае")
+    parser.add_argument('--debug', '-d', action='store_true', help="Включить режим отладки")
 
     args = parser.parse_args()
     all_langs(args.all_langs)

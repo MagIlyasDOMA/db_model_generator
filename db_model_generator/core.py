@@ -1,5 +1,6 @@
 import json
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 from warnings import warn
 from dotenv import dotenv_values
@@ -27,6 +28,8 @@ class Environment:
     label_original_language: LanguageCodeType = 'en'
     log_mode: bool = False
     submit: NullStr = None
+    non_rewritable: bool = False
+    ignore_and_rewrite: bool = False
 
     def __post_init__(self):
         self.__errors()
@@ -49,6 +52,24 @@ class Environment:
         if self.only_model and self.submit:
             warn('submit is meaningless', MeaninglessArgumentWarning)
 
+class Code:
+    def __init__(self, code: str, class_name: str):
+        self._code = code
+        self._class_name = class_name
+
+    @property
+    def code(self):
+        return self._code
+
+    @property
+    def class_name(self):
+        return self._class_name
+
+    def __str__(self):
+        return self.code
+
+    def __iter__(self):
+        return iter((self.code, self.class_name))
 
 
 class ModelFormGenerator:
@@ -56,22 +77,27 @@ class ModelFormGenerator:
 
     _translator: Optional[GoogleTranslator] = None
     environment: Environment
+    __NON_REWRITABLE_DECORATOR: str = '# @non-rewritable'
 
-    def __init__(self,
-                 config_path: PathLikeOrNone = None,
-                 database_url: NullStr = None,
-                 table_name: NullStr = None,
-                 output_path: NullStr = None,
-                 default_rename: NullBool = None,
-                 only_model: NullBool = None,
-                 only_form: NullBool = None,
-                 classic_sqlalchemy: NullBool = None,
-                 tab: NullBool = None,
-                 translate_labels: Optional[LanguageCodeType] = None,
-                 label_original_language: Optional[LanguageCodeType] = None,
-                 log_mode: NullBool = None,
-                 env: PathLikeOrNone = None,
-                 submit: NullStr = None):
+    def __init__(
+         self,
+         config_path: PathLikeOrNone = None,
+         database_url: NullStr = None,
+         table_name: NullStr = None,
+         output_path: NullStr = None,
+         default_rename: NullBool = None,
+         only_model: NullBool = None,
+         only_form: NullBool = None,
+         classic_sqlalchemy: NullBool = None,
+         tab: NullBool = None,
+         translate_labels: Optional[LanguageCodeType] = None,
+         label_original_language: Optional[LanguageCodeType] = None,
+         log_mode: NullBool = None,
+         env: PathLikeOrNone = None,
+         submit: NullStr = None,
+         non_rewritable: NullBool = None,
+         ignore_and_rewrite: NullBool = None
+    ):
         self._init_environment(env)
         if not config_path:
             config_path = self.environment.config_path
@@ -88,7 +114,9 @@ class ModelFormGenerator:
             label_original_language=label_original_language,
             output_path=output_path,
             log_mode=log_mode,
-            submit=submit
+            submit=submit,
+            non_rewritable=non_rewritable,
+            ignore_and_rewrite=ignore_and_rewrite
         ))
         self.engine = create_engine(self.database_url)
         self.metadata = MetaData()
@@ -162,6 +190,8 @@ class ModelFormGenerator:
         self.output_path: Path = self.__output_path(args['output_path'])
         self.log_mode = args['log_mode']
         self.submit = args['submit']
+        self.non_rewritable = args['non_rewritable']
+        self.ignore_and_rewrite = args['ignore_and_rewrite']
 
     @staticmethod
     def __get_classic_sqlalchemy(default, config_path: PathLikeOrNone = None) -> bool:
@@ -228,7 +258,9 @@ class ModelFormGenerator:
                 "label_original_language": self.environment.label_original_language,
                 "output_path": self.environment.output_path,
                 "log_mode": self.environment.log_mode,
-                "submit": self.environment.submit
+                "submit": self.environment.submit,
+                "non_rewritable": self.environment.non_rewritable,
+                "ignore_and_rewrite": self.environment.ignore_and_rewrite
             }
         }
 
@@ -374,7 +406,7 @@ class ModelFormGenerator:
         """Преобразует snake_case в CamelCase"""
         return ''.join(word.capitalize() for word in name.split('_'))
 
-    def generate_model(self, class_name=None):
+    def generate_model(self, class_name=None) -> Code:
         """Генерирует код модели SQLAlchemy"""
         if not class_name:
             class_name = self._to_camel_case(self.table_name)
@@ -388,9 +420,8 @@ class ModelFormGenerator:
         model_code = [f"{imports}\n\n"]
 
         if not self.classic_sqlalchemy:
-            model_code.append(f"db = SQLAlchemy()\n\n")
+            model_code.append(f"db = SQLAlchemy()\n\n\n")
 
-        model_code.append(f"__all__ = ['{class_name}']\n\n\n")
         model_code.append(f"class {class_name}({self.config['model']['base_class']}):\n")
         model_code.append(f"\t__tablename__ = '{self.table_name}'\n")
 
@@ -429,7 +460,7 @@ class ModelFormGenerator:
         model_code.append("\n    def __repr__(self):\n")
         model_code.append(f"        return f'<{class_name} {{self.id}}>'\n")
 
-        return "".join(model_code)
+        return Code("".join(model_code), class_name)
 
     def _translate(self, text: str):
         if self.translate_labels:
@@ -442,7 +473,7 @@ class ModelFormGenerator:
                 return text
         return text
 
-    def generate_form(self, class_name=None):
+    def generate_form(self, class_name=None) -> Code:
         """Генерирует код формы WTForms"""
         if not class_name:
             form_class_name = self._to_camel_case(self.table_name) + "Form"
@@ -455,7 +486,7 @@ class ModelFormGenerator:
         imports = "\n".join(self.config["form"]["imports"])
 
         # Код формы
-        form_code = [f"{imports}\n\n", f"__all__ = ['{form_class_name}']\n\n\n", f"class {form_class_name}({self.config['form']['base_class']}):\n"]
+        form_code = [f"{imports}\n\n\n", f"class {form_class_name}({self.config['form']['base_class']}):\n"]
 
         for column in columns_info:
             if column['name'] in self.config["model"]["exclude_columns"] or column['primary_key']:
@@ -483,7 +514,17 @@ class ModelFormGenerator:
             for key, value in meta.items():
                 form_code.append(f'\t\t{key} = {value}\n')
 
-        return "".join(form_code)
+        return Code("".join(form_code), form_class_name)
+
+    def __database_label(self):
+        url = self.database_url
+        if 'sqlite:///' in url:
+            path = url.replace('sqlite:///', '')
+            label = "Путь к базе данных: "
+        else:
+            path = url
+            label = "URL базы данных: "
+        return label + path
 
     def generate_file(self):
         """Генерирует файл с моделью и/или формой"""
@@ -494,21 +535,30 @@ class ModelFormGenerator:
             model_class_name = None
             form_class_name = None
 
-        model_code = ""
-        form_code = ""
+        model_code = ''
+        form_code = ''
+        all_list = list()
 
         # Генерируем только то, что нужно
         if not self.only_form:
-            model_code = self.generate_model(model_class_name)
+            model_code, model_class = self.generate_model(model_class_name)
+            all_list.append(model_class)
 
         if not self.only_model:
-            form_code = self.generate_form(form_class_name)
+            form_code, form_class = self.generate_form(form_class_name)
+            all_list.append(form_class)
 
         if self.output_path:
-            # Записываем в файл
+            with open(self.output_path, encoding='utf-8') as file:
+                if file.read().startswith(self.__NON_REWRITABLE_DECORATOR) and not self.ignore_and_rewrite:
+                    raise RuntimeError("Данный файл отмечен как неперезаписываемый")
             with open(self.output_path, 'w', encoding='utf-8') as file:
-                file.write('__all__ = []\n\n')
-
+                if self.non_rewritable:
+                    file.write(self.__NON_REWRITABLE_DECORATOR)
+                file.write(f"# Файл сгенерирован db-model-generator {datetime.now().strftime('%d.%m.%Y %H:%M:%S')}\n")
+                file.write(f'# {self.__database_label()}\n')
+                file.write(f"# Название таблицы: {self.table_name}\n\n")
+                file.write(f'__all__ = {all_list}\n\n')
                 if model_code:
                     file.write("# Модель SQLAlchemy\n")
                     if not self.tab:
