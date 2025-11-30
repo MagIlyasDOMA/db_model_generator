@@ -25,14 +25,14 @@ def translate_validator(language_code: str) -> str:
     return language_code
 
 
-def generate(database: PathLikeOrNone, table_name: str, output: PathLikeOrNone = None,
+def generate(*, database: PathLikeOrNone, table_name: str, output: PathLikeOrNone = None,
              config: PathLikeOrNone = None, default_rename: bool = False,
              only_model: bool = False, only_form: bool = False,
              classic_sqlalchemy: bool = False, tab: bool = False,
              translate_labels: Optional[LanguageCodeType] = None,
              label_original_language: Optional[LanguageCodeType] = None,
              log_mode: bool = False, env: Union[PathLikeOrNone, UndefinedType] = None,
-             submit: NullStr = None, non_rewritable: bool = False,
+             submit: NullStr = None, non_rewritable: bool = False, add_db_to_all: bool = False,
              ignore_and_rewrite: bool = False, debug: bool = False, **kwargs) -> None:
     """
    Генерирует модели SQLAlchemy и формы WTForms на основе таблицы базы данных.
@@ -65,6 +65,14 @@ def generate(database: PathLikeOrNone, table_name: str, output: PathLikeOrNone =
    :type env: str или None
    :param submit: Текст для кнопки submit в форме (если None, кнопка не добавляется)
    :type submit: str или None
+   :param debug: Включить режим отладки
+   :type debug: bool
+   :param ignore_and_rewrite: Перезаписать файл в любом случае
+   :type ignore_and_rewrite: bool
+   :param add_db_to_all: Добавить объект базы данных (db) в __all__
+   :type add_db_to_all: bool
+   :param non_rewritable: Отметить файл как неперезаписываемый
+   :type non_rewritable: bool
 
    :raises ValueError: Если не указаны обязательные параметры database или table_name
    :raises ConnectionError: Если не удается подключиться к указанной базе данных
@@ -93,7 +101,8 @@ def generate(database: PathLikeOrNone, table_name: str, output: PathLikeOrNone =
             env=env,
             submit=submit,
             non_rewritable=non_rewritable,
-            ignore_and_rewrite=ignore_and_rewrite
+            ignore_and_rewrite=ignore_and_rewrite,
+            add_db_to_all=add_db_to_all
         )
         generator.generate_file()
     except Exception as e:
@@ -130,7 +139,7 @@ def main():
     # Опции
     parser.add_argument('--database', dest='database', help='URL базы данных (например: sqlite:///example.db)')
     parser.add_argument('--table-name', dest='table_name', help='Имя таблицы для генерации')
-    parser.add_argument('--output', dest='output', help='Имя выходного файла')
+    parser.add_argument('--output', '-o', dest='output', help='Имя выходного файла')
     parser.add_argument('--config', '-c', dest='config', help='Путь к JSON файлу конфигурации')
     parser.add_argument('--default-rename', '-r', action='store_true',
                         help='Переименовать классы в Model и Form')
@@ -163,6 +172,8 @@ def main():
     parser.add_argument('--ignore-and-rewrite', '-i', action='store_true',
                         help="Перезаписать файл в любом случае")
     parser.add_argument('--debug', '-d', action='store_true', help="Включить режим отладки")
+    parser.add_argument('--add-db-to-all', '--add-db', '--db-add', '-a', dest='add_db_to_all',
+                        action='store_true', help="Добавить объект базы данных (db) в __all__")
 
     args = parser.parse_args()
     all_langs(args.all_langs)

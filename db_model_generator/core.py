@@ -9,8 +9,8 @@ from tab4 import tab4
 from sqlalchemy import create_engine, MetaData, Table, inspect
 from sqlalchemy.types import String, Integer, Float, Text, Boolean, DateTime, Date
 from pyundefined import undefined
-from .typings import *
-from .warnings import MeaninglessArgumentWarning
+from db_model_generator.typings import *
+from db_model_generator.warnings import MeaninglessArgumentWarning
 
 
 @dataclass
@@ -30,6 +30,7 @@ class Environment:
     submit: NullStr = None
     non_rewritable: bool = False
     ignore_and_rewrite: bool = False
+    add_db_to_all: bool = False
 
     def __post_init__(self):
         self.__errors()
@@ -96,7 +97,8 @@ class ModelFormGenerator:
          env: PathLikeOrNone = None,
          submit: NullStr = None,
          non_rewritable: NullBool = None,
-         ignore_and_rewrite: NullBool = None
+         ignore_and_rewrite: NullBool = None,
+         add_db_to_all: NullBool = None
     ):
         self._init_environment(env)
         if not config_path:
@@ -116,7 +118,8 @@ class ModelFormGenerator:
             log_mode=log_mode,
             submit=submit,
             non_rewritable=non_rewritable,
-            ignore_and_rewrite=ignore_and_rewrite
+            ignore_and_rewrite=ignore_and_rewrite,
+            add_db_to_all=add_db_to_all
         ))
         self.engine = create_engine(self.database_url)
         self.metadata = MetaData()
@@ -192,6 +195,7 @@ class ModelFormGenerator:
         self.submit = args['submit']
         self.non_rewritable = args['non_rewritable']
         self.ignore_and_rewrite = args['ignore_and_rewrite']
+        self.add_db_to_all = args['add_db_to_all']
 
     @staticmethod
     def __get_classic_sqlalchemy(default, config_path: PathLikeOrNone = None) -> bool:
@@ -260,7 +264,8 @@ class ModelFormGenerator:
                 "log_mode": self.environment.log_mode,
                 "submit": self.environment.submit,
                 "non_rewritable": self.environment.non_rewritable,
-                "ignore_and_rewrite": self.environment.ignore_and_rewrite
+                "ignore_and_rewrite": self.environment.ignore_and_rewrite,
+                "add_db_to_all": self.environment.add_db_to_all
             }
         }
 
@@ -548,10 +553,14 @@ class ModelFormGenerator:
             form_code, form_class = self.generate_form(form_class_name)
             all_list.append(form_class)
 
+        if self.add_db_to_all:
+            all_list.append('db')
+
         if self.output_path:
-            with open(self.output_path, encoding='utf-8') as file:
-                if file.read().startswith(self.__NON_REWRITABLE_DECORATOR) and not self.ignore_and_rewrite:
-                    raise RuntimeError("Данный файл отмечен как неперезаписываемый")
+            if Path(self.output_path).is_file():
+                with open(self.output_path, encoding='utf-8') as file:
+                    if file.read().startswith(self.__NON_REWRITABLE_DECORATOR) and not self.ignore_and_rewrite:
+                        raise RuntimeError("Данный файл отмечен как неперезаписываемый")
             with open(self.output_path, 'w', encoding='utf-8') as file:
                 if self.non_rewritable:
                     file.write(self.__NON_REWRITABLE_DECORATOR)
@@ -584,17 +593,4 @@ class ModelFormGenerator:
             if form_code:
                 generated.append("форма")
             self.log(f"Сгенерировано: {', '.join(generated)}")
-
-        else:
-            # Выводим в консоль
-            if model_code:
-                self.log("# Модель SQLAlchemy")
-                self.log(model_code)
-                if form_code:
-                    self.log("\n")
-
-            if form_code:
-                self.log("# Форма WTForms")
-                self.log(form_code)
-
         return model_code, form_code

@@ -24,7 +24,7 @@ with open('README.md', encoding='utf-8') as file:
 clean()
 setup(
     name='db-model-generator',
-    version='1.4.0',
+    version='1.4.1',
     packages=find_packages(),
     author="Маг Ильяс DOMA (MagIlyasDOMA)",
     author_email='magilyas.doma.09@list.ru',

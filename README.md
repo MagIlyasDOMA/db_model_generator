@@ -56,6 +56,8 @@ db-model-generator [ОПЦИИ] DATABASE TABLE_NAME [OUTPUT] [CONFIG]
 
 - `--debug`, `-d` - включить режим отладки
 
+- `--add-db-to-all`, `--add-db`, `--db-add`, `-a` - Добавить объект базы данных (db) в `__all__`
+
 #### Примеры использования:
 ```bash
 # Базовая генерация модели и формы
@@ -125,6 +127,8 @@ db-model-generator sqlite:///example.db users --debug
 
 `IGNORE_AND_REWRITE` - принудительная перезапись файла (true/false)
 
+`ADD_DB_TO_ALL` - Добавить объект базы данных (db) в `__all__`
+
 #### Пример .env-файла
 ```dotenv
 DATABASE_URL=sqlite:///example.db
@@ -141,6 +145,7 @@ LOG_MODE=true
 SUBMIT=Отправить
 NON_REWRITABLE=false
 IGNORE_AND_REWRITE=false
+ADD_DB_TO_ALL=false
 ```
 
 
@@ -205,6 +210,8 @@ generate(
 - `ignore_and_rewrite` (bool) - принудительная перезапись файла
 
 - `debug` (bool) - включить режим отладки
+
+- `add_db_to_all` (bool) - Добавить объект базы данных (db) в `__all__ `
 
 ## Конфигурационный файл
 Вы можете создать JSON файл конфигурации для настройки генерации:
