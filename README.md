@@ -92,6 +92,9 @@ db-model-generator sqlite:///example.db users --ignore-and-rewrite
 
 # Режим отладки с подробными ошибками
 db-model-generator sqlite:///example.db users --debug
+
+# Добавить переменную db в __all__
+db-model-generator sqlite:///example.db users --add-db-to-all
 ```
 
 ### Использование env-файлов
@@ -374,5 +377,5 @@ class UsersForm(FlaskForm):
 Опция --log-mode включает подробное логирование процесса генерации, что помогает отслеживать каждый этап работы пакета.
 
 ### Версия
-Текущая версия пакета: 1.4.0
+Текущая версия пакета: 1.4.1
 
