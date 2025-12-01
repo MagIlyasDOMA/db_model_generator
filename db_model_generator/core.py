@@ -25,14 +25,18 @@ class Environment:
     classic_sqlalchemy: bool = False
     tab: bool = False
     translate_labels: Optional[LanguageCodeType] = None
-    label_original_language: LanguageCodeType = 'en'
+    label_original_language: Optional[LanguageCodeType] = None
     log_mode: bool = False
     submit: NullStr = None
     non_rewritable: bool = False
     ignore_and_rewrite: bool = False
     add_db_to_all: bool = False
+    colon_to_labels: bool = False
 
     def __post_init__(self):
+        self.__label_original_language = self.label_original_language
+        if not self.label_original_language:
+            self.label_original_language = 'en'
         self.__errors()
         self.__warnings()
 
@@ -40,18 +44,18 @@ class Environment:
         if self.only_model and self.only_form:
             raise ValueError('only_model and only_form are mutually exclusive')
 
-    @property
-    def __label_original_language(self):
-        return self.label_original_language != 'en'
-
     def __warnings(self):
         if ((self.__label_original_language and not self.translate_labels) or
                 (self.only_model and self.__label_original_language)):
             warn('label_original_language is meaningless', MeaninglessArgumentWarning)
-        if self.only_model and self.translate_labels:
-            warn('translate_labels is meaningless', MeaninglessArgumentWarning)
-        if self.only_model and self.submit:
-            warn('submit is meaningless', MeaninglessArgumentWarning)
+        if self.only_model:
+            if self.translate_labels:
+                warn('translate_labels is meaningless', MeaninglessArgumentWarning)
+            if self.submit:
+                warn('submit is meaningless', MeaninglessArgumentWarning)
+            if self.colon_to_labels:
+                warn('colon_to_labels is meaningless', MeaninglessArgumentWarning)
+
 
 class Code:
     def __init__(self, code: str, class_name: str):
@@ -98,7 +102,8 @@ class ModelFormGenerator:
          submit: NullStr = None,
          non_rewritable: NullBool = None,
          ignore_and_rewrite: NullBool = None,
-         add_db_to_all: NullBool = None
+         add_db_to_all: NullBool = None,
+         colon_to_labels: NullBool = None
     ):
         self._init_environment(env)
         if not config_path:
@@ -119,7 +124,8 @@ class ModelFormGenerator:
             submit=submit,
             non_rewritable=non_rewritable,
             ignore_and_rewrite=ignore_and_rewrite,
-            add_db_to_all=add_db_to_all
+            add_db_to_all=add_db_to_all,
+            colon_to_labels=colon_to_labels
         ))
         self.engine = create_engine(self.database_url)
         self.metadata = MetaData()
@@ -196,6 +202,7 @@ class ModelFormGenerator:
         self.non_rewritable = args['non_rewritable']
         self.ignore_and_rewrite = args['ignore_and_rewrite']
         self.add_db_to_all = args['add_db_to_all']
+        self.colon_to_labels = args['colon_to_labels']
 
     @staticmethod
     def __get_classic_sqlalchemy(default, config_path: PathLikeOrNone = None) -> bool:
@@ -265,7 +272,8 @@ class ModelFormGenerator:
                 "submit": self.environment.submit,
                 "non_rewritable": self.environment.non_rewritable,
                 "ignore_and_rewrite": self.environment.ignore_and_rewrite,
-                "add_db_to_all": self.environment.add_db_to_all
+                "add_db_to_all": self.environment.add_db_to_all,
+                "colon_to_labels": self.environment.colon_to_labels
             }
         }
 
@@ -503,6 +511,8 @@ class ModelFormGenerator:
             # Лейбл поля (преобразуем snake_case в Normal Case)
             label_text = column['name'].replace('_', ' ').title()
             label = self._translate(label_text)
+            if self.colon_to_labels:
+                label += ':'
 
             # Параметры поля
             if validators:

@@ -58,6 +58,8 @@ db-model-generator [ОПЦИИ] DATABASE TABLE_NAME [OUTPUT] [CONFIG]
 
 - `--add-db-to-all`, `--add-db`, `--db-add`, `-a` - Добавить объект базы данных (db) в `__all__`
 
+- `--colon-to-labels`, `--colon-to-label`, `-n` - Добавить двоеточие в конце labels формы
+
 #### Примеры использования:
 ```bash
 # Базовая генерация модели и формы
@@ -132,6 +134,8 @@ db-model-generator sqlite:///example.db users --add-db-to-all
 
 `ADD_DB_TO_ALL` - Добавить объект базы данных (db) в `__all__`
 
+`COLON_TO_LABELS` - Добавить двоеточие в конце labels формы
+
 #### Пример .env-файла
 ```dotenv
 DATABASE_URL=sqlite:///example.db
@@ -149,6 +153,7 @@ SUBMIT=Отправить
 NON_REWRITABLE=false
 IGNORE_AND_REWRITE=false
 ADD_DB_TO_ALL=false
+COLON_TO_LABELS=false
 ```
 
 
@@ -175,7 +180,8 @@ generate(
     submit='Send',
     non_rewritable=False,
     ignore_and_rewrite=True,
-    debug=False
+    debug=False,
+    colon_to_labels=False
 )
 ```
 
@@ -215,6 +221,8 @@ generate(
 - `debug` (bool) - включить режим отладки
 
 - `add_db_to_all` (bool) - Добавить объект базы данных (db) в `__all__ `
+
+- `colon_to_labels` (bool) - Добавить двоеточие в конце labels формы
 
 ## Конфигурационный файл
 Вы можете создать JSON файл конфигурации для настройки генерации:
@@ -274,7 +282,8 @@ generate(
         "log_mode": false,
         "submit": "Send",
         "non_rewritable": false,
-        "ignore_and_rewrite": false
+        "ignore_and_rewrite": false,
+        "colon_to_labels": false
     }
 }
 ```
@@ -377,5 +386,5 @@ class UsersForm(FlaskForm):
 Опция --log-mode включает подробное логирование процесса генерации, что помогает отслеживать каждый этап работы пакета.
 
 ### Версия
-Текущая версия пакета: 1.4.1
+Текущая версия пакета: 1.4.2
 

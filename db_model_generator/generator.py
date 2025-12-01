@@ -33,7 +33,8 @@ def generate(*, database: PathLikeOrNone, table_name: str, output: PathLikeOrNon
              label_original_language: Optional[LanguageCodeType] = None,
              log_mode: bool = False, env: Union[PathLikeOrNone, UndefinedType] = None,
              submit: NullStr = None, non_rewritable: bool = False, add_db_to_all: bool = False,
-             ignore_and_rewrite: bool = False, debug: bool = False, **kwargs) -> None:
+             ignore_and_rewrite: bool = False, debug: bool = False,
+             colon_to_labels: bool = False, **kwargs) -> None:
     """
    Генерирует модели SQLAlchemy и формы WTForms на основе таблицы базы данных.
 
@@ -73,6 +74,8 @@ def generate(*, database: PathLikeOrNone, table_name: str, output: PathLikeOrNon
    :type add_db_to_all: bool
    :param non_rewritable: Отметить файл как неперезаписываемый
    :type non_rewritable: bool
+   :param colon_to_labels: Добавить двоеточие в конце labels формы
+   :type colon_to_labels: bool
 
    :raises ValueError: Если не указаны обязательные параметры database или table_name
    :raises ConnectionError: Если не удается подключиться к указанной базе данных
@@ -102,7 +105,8 @@ def generate(*, database: PathLikeOrNone, table_name: str, output: PathLikeOrNon
             submit=submit,
             non_rewritable=non_rewritable,
             ignore_and_rewrite=ignore_and_rewrite,
-            add_db_to_all=add_db_to_all
+            add_db_to_all=add_db_to_all,
+            colon_to_labels=colon_to_labels
         )
         generator.generate_file()
     except Exception as e:
@@ -174,6 +178,8 @@ def main():
     parser.add_argument('--debug', '-d', action='store_true', help="Включить режим отладки")
     parser.add_argument('--add-db-to-all', '--add-db', '--db-add', '-a', dest='add_db_to_all',
                         action='store_true', help="Добавить объект базы данных (db) в __all__")
+    parser.add_argument('--colon-to-labels', '--colon-to-label', '-n', dest="colon_to_labels",
+                        action='store_true', help="Добавить двоеточие в конце labels формы")
 
     args = parser.parse_args()
     all_langs(args.all_langs)
