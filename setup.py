@@ -34,7 +34,7 @@ setup(
     license="MIT",
     keywords=["sqlalchemy", "wtforms", "code-generation", "database", "models", "forms"],
     classifiers=[
-        "Development Status :: 5 - Production/Stable",
+        "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: MIT License",
         "Programming Language :: Python :: 3",
