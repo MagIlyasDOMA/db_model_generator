@@ -24,7 +24,7 @@ with open('README.md', encoding='utf-8') as file:
 clean()
 setup(
     name='db-model-generator',
-    version='1.5.0',
+    version='1.5.1',
     packages=find_packages(),
     author="Маг Ильяс DOMA (MagIlyasDOMA)",
     author_email='magilyas.doma.09@list.ru',
@@ -59,36 +59,46 @@ setup(
         "python-dotenv>=1.0.0",
         "undefined-python>=1.0.0",
         "typing-extensions>=4.0.0; python_version<'3.8'",
+        "requests>=2.0.0"
     ],
     python_requires='>=3.10',
-    extras_require={
-        'base': [
+    extras_require=dict(
+        base=[
             "sqlalchemy==2.0.44",
             "deep-translator>=1.11.4",
             "tab4>=0.1.0",
             "python-dotenv>=1.0.0",
             "undefined-python>=1.1.0",
             "typing-extensions>=4.0.0; python_version<'3.8'",
+            "requests>=2.0.0"
         ],
-        'flask': [
-            "flask>=3.1.1,<4.0.0",
-            "flask-sqlalchemy==3.1.1",
-            "flask-wtf==1.2.2",
-            "wtforms==3.2.1",
-        ],
-        'all': [
+        flask=[
             "sqlalchemy==2.0.44",
             "deep-translator>=1.11.4",
             "tab4>=0.1.0",
             "python-dotenv>=1.0.0",
             "undefined-python>=1.0.0",
             "typing-extensions>=4.0.0; python_version<'3.8'",
+            "requests>=2.0.0"
             "flask>=3.1.1,<4.0.0",
             "flask-sqlalchemy==3.1.1",
             "flask-wtf==1.2.2",
-            "wtforms==3.2.1",
+            "wtforms==3.2.1"
         ],
-    },
+        all=[
+            "sqlalchemy==2.0.44",
+            "deep-translator>=1.11.4",
+            "tab4>=0.1.0",
+            "python-dotenv>=1.0.0",
+            "undefined-python>=1.0.0",
+            "typing-extensions>=4.0.0; python_version<'3.8'",
+            "requests>=2.0.0"
+            "flask>=3.1.1,<4.0.0",
+            "flask-sqlalchemy==3.1.1",
+            "flask-wtf==1.2.2",
+            "wtforms==3.2.1"
+        ]
+    ),
     entry_points={
         'console_scripts': [
             "db-model-generator=db_model_generator.generator:main",
