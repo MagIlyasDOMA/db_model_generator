@@ -71,8 +71,11 @@ db-model-generator sqlite:///example.db users --only-model
 # Генерация с сохранением в файл
 db-model-generator sqlite:///example.db users models.py
 
-# Использование конфигурационного файла
+# Использование локального конфигурационного файла
 db-model-generator sqlite:///example.db users --config config.json
+
+# Использование конфигурационного файла из интернета
+db-model-generator sqlite:///example.db users --config https://example.com/config.json
 
 # Перевод labels на русский язык
 db-model-generator sqlite:///example.db users --translate-labels ru
@@ -386,5 +389,5 @@ class UsersForm(FlaskForm):
 Опция --log-mode включает подробное логирование процесса генерации, что помогает отслеживать каждый этап работы пакета.
 
 ### Версия
-Текущая версия пакета: 1.4.2
+Текущая версия пакета: 1.5.0
 

@@ -3,12 +3,15 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from warnings import warn
+
+import requests
 from dotenv import dotenv_values
 from deep_translator import GoogleTranslator
 from tab4 import tab4
 from sqlalchemy import create_engine, MetaData, Table, inspect
 from sqlalchemy.types import String, Integer, Float, Text, Boolean, DateTime, Date
 from pyundefined import undefined
+from urllib.parse import urlparse
 from db_model_generator.typings import *
 from db_model_generator.warnings import MeaninglessArgumentWarning
 
@@ -214,6 +217,14 @@ class ModelFormGenerator:
                     pass
         return default['arguments']['classic_sqlalchemy']
 
+    @staticmethod
+    def __is_url(string: str) -> bool:
+        try:
+            result = urlparse(string)
+            return all([result.scheme, result.netloc])
+        except:
+            return False
+
     def _load_config(self, config_path):
         """Загружает конфигурацию из JSON файла"""
         # Базовые настройки для Flask-SQLAlchemy
@@ -302,14 +313,15 @@ class ModelFormGenerator:
 
         # Загружаем пользовательскую конфигурацию если указан путь
         if config_path:
-            if Path(config_path).exists():
+            if self.__is_url(config_path):
+                response = requests.get(config_path)
+                if response.ok:
+                    self._update_config(default_config, response.json(), True)
+            elif Path(config_path).exists():
                 with open(config_path, 'r', encoding='utf-8') as f:
-                    user_config = json.load(f)
-                    user_config['arguments'] = self.__fix_args_keys(user_config.get('arguments', {}))
-                    self._update_config(default_config, user_config)
+                    self._update_config(default_config, json.load(f), True)
             else:
                 warn("Конфигурационного файла не существует", UserWarning, 3)
-
         return default_config
 
     @staticmethod
@@ -323,11 +335,13 @@ class ModelFormGenerator:
             del arguments['output']
         return arguments
 
-    def _update_config(self, default, user):
+    def _update_config(self, default, user, is_first: bool):
         """Рекурсивно обновляет конфигурацию по умолчанию пользовательской"""
+        if is_first:
+            user['arguments'] = self.__fix_args_keys(user.get('arguments', {}))
         for key, value in user.items():
             if key in default and isinstance(default[key], dict) and isinstance(value, dict):
-                self._update_config(default[key], value)
+                self._update_config(default[key], value, False)
             else:
                 default[key] = value
 
