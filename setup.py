@@ -34,7 +34,7 @@ setup(
     license="MIT",
     keywords=["sqlalchemy", "wtforms", "code-generation", "database", "models", "forms"],
     classifiers=[
-        "Development Status :: 4 - Beta",
+        "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: MIT License",
         "Programming Language :: Python :: 3",
@@ -62,8 +62,8 @@ setup(
         "requests>=2.0.0"
     ],
     python_requires='>=3.10',
-    extras_require=dict(
-        base=[
+    extras_require={
+        'base': [
             "sqlalchemy==2.0.44",
             "deep-translator>=1.11.4",
             "tab4>=0.1.0",
@@ -72,33 +72,33 @@ setup(
             "typing-extensions>=4.0.0; python_version<'3.8'",
             "requests>=2.0.0"
         ],
-        flask=[
+        'flask': [
             "sqlalchemy==2.0.44",
             "deep-translator>=1.11.4",
             "tab4>=0.1.0",
             "python-dotenv>=1.0.0",
-            "undefined-python>=1.0.0",
+            "undefined-python>=1.1.0",
             "typing-extensions>=4.0.0; python_version<'3.8'",
-            "requests>=2.0.0"
+            "requests>=2.0.0",
             "flask>=3.1.1,<4.0.0",
             "flask-sqlalchemy==3.1.1",
             "flask-wtf==1.2.2",
-            "wtforms==3.2.1"
+            "wtforms==3.2.1",
         ],
-        all=[
+        'all': [
             "sqlalchemy==2.0.44",
             "deep-translator>=1.11.4",
             "tab4>=0.1.0",
             "python-dotenv>=1.0.0",
-            "undefined-python>=1.0.0",
+            "undefined-python>=1.1.0",
             "typing-extensions>=4.0.0; python_version<'3.8'",
-            "requests>=2.0.0"
+            "requests>=2.0.0",
             "flask>=3.1.1,<4.0.0",
             "flask-sqlalchemy==3.1.1",
             "flask-wtf==1.2.2",
-            "wtforms==3.2.1"
-        ]
-    ),
+            "wtforms==3.2.1",
+        ],
+    },
     entry_points={
         'console_scripts': [
             "db-model-generator=db_model_generator.generator:main",
